@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.net.URL;
 
 /**
@@ -26,5 +27,10 @@ public class CommonUtils {
       String jsonText = readAll(rd);
       return new JSONObject(jsonText);
     }
+  }
+
+  public static double percentageStringToDouble(String percentage) {
+    return new BigDecimal(percentage.trim().replace("%", ""))
+        .divide(BigDecimal.valueOf(100)).doubleValue();
   }
 }
