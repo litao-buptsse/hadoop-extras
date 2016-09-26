@@ -1,6 +1,5 @@
 package com.sogou.hadoop.extras.tools.fastcp;
 
-import com.sogou.hadoop.extras.tools.hdfs.HdfsUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -17,49 +16,45 @@ import java.util.List;
 public class FastCpInputFormat extends InputFormat {
   private final Log log = LogFactory.getLog(FastCpInputFormat.class);
 
-  public static void setSrcNamenode(Job job, String srcNamenode) {
-    job.getConfiguration().set("srcNamenode", srcNamenode);
+  private final static String COPY_LIST_DIR = "copyListDir";
+  private final static String SRC_NAMENODE = "srcNamenode";
+  private final static String DST_NAMENODE = "dstNamenode";
+  private final static String DST_DIR = "dstDir";
+
+  public static void setCopyListDir(Job job, String copyListDir) {
+    job.getConfiguration().set(COPY_LIST_DIR, copyListDir);
   }
 
-  public static void setSrcDir(Job job, String srcDir) {
-    job.getConfiguration().set("srcDir", srcDir);
+  public static void setSrcNamenode(Job job, String srcNamenode) {
+    job.getConfiguration().set(SRC_NAMENODE, srcNamenode);
   }
 
   public static void setDstNamenode(Job job, String dstNamenode) {
-    job.getConfiguration().set("dstNamenode", dstNamenode);
+    job.getConfiguration().set(DST_NAMENODE, dstNamenode);
   }
 
   public static void setDstDir(Job job, String dstDir) {
-    job.getConfiguration().set("dstDir", dstDir);
-  }
-
-  public static void setLevel(Job job, int level) {
-    job.getConfiguration().set("level", String.valueOf(level));
+    job.getConfiguration().set(DST_DIR, dstDir);
   }
 
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     Configuration conf = jobContext.getConfiguration();
 
-    String srcNamenode = conf.get("srcNamenode");
-    String srcDir = conf.get("srcDir");
-    String dstNamenode = conf.get("dstNamenode");
-    String dstDir = conf.get("dstDir");
-    int level = Integer.parseInt(conf.get("level"));
+    PathData copyListDir = new PathData(conf.get(COPY_LIST_DIR), conf);
+    String srcNamenode = conf.get(SRC_NAMENODE);
+    String dstNamenode = conf.get(DST_NAMENODE);
+    String dstDir = conf.get(DST_DIR);
 
-    String fullSrcDir = srcNamenode + srcDir;
-
-    List<PathData> children = new ArrayList<>();
-    HdfsUtils.listDirByLevel(new PathData(fullSrcDir, conf), children, level);
-
-    List<InputSplit> inputSplits = new ArrayList<>();
-    for (PathData child : children) {
-      String childDstDir = dstNamenode + dstDir + child.path.toUri().getPath();
-      inputSplits.add(new FastCpInputSplit(child.path.toString(), childDstDir));
-      log.info("add fastcp split: " + child + ", " + childDstDir);
+    List<InputSplit> splits = new ArrayList<>();
+    for (PathData copyListFile : copyListDir.getDirectoryContents()) {
+      splits.add(new FastCpInputSplit(copyListFile.path.toString(),
+          srcNamenode, dstNamenode, dstDir));
+      log.info("add fastcp split: " + copyListFile.path.toString() + ", "
+          + srcNamenode + ", " + dstNamenode + ", " + dstDir);
     }
 
-    return inputSplits;
+    return splits;
   }
 
   @Override

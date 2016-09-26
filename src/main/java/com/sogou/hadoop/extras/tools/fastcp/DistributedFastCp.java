@@ -17,23 +17,19 @@ public class DistributedFastCp implements Tool {
   private final static Log log = LogFactory.getLog(DistributedFastCp.class);
 
   private Configuration conf;
+  private String copyListDir;
   private String srcNamenode;
-  private String srcDir;
   private String dstNamenode;
   private String dstDir;
-  private String outputDir;
-  private int level;
+  private String resultDir;
 
-  private final static int DEFAULT_LEVEL = 3;
-
-  public DistributedFastCp(String srcNamenode, String srcDir,
-                           String dstNamenode, String dstDir, String outputDir, int level) {
+  public DistributedFastCp(String copyListDir, String srcNamenode,
+                           String dstNamenode, String dstDir, String resultDir) {
+    this.copyListDir = copyListDir;
     this.srcNamenode = srcNamenode;
-    this.srcDir = srcDir;
     this.dstNamenode = dstNamenode;
     this.dstDir = dstDir;
-    this.outputDir = outputDir;
-    this.level = level;
+    this.resultDir = resultDir;
   }
 
   @Override
@@ -46,14 +42,13 @@ public class DistributedFastCp implements Tool {
     job.setReducerClass(DistributedFastCpReducer.class);
 
     job.setInputFormatClass(FastCpInputFormat.class);
+    FastCpInputFormat.setCopyListDir(job, copyListDir);
     FastCpInputFormat.setSrcNamenode(job, srcNamenode);
-    FastCpInputFormat.setSrcDir(job, srcDir);
     FastCpInputFormat.setDstNamenode(job, dstNamenode);
     FastCpInputFormat.setDstDir(job, dstDir);
-    FastCpInputFormat.setLevel(job, level);
 
     job.setOutputFormatClass(TextOutputFormat.class);
-    TextOutputFormat.setOutputPath(job, new Path(outputDir));
+    TextOutputFormat.setOutputPath(job, new Path(resultDir));
 
     job.setMapOutputKeyClass(Text.class);
     job.setMapOutputValueClass(Text.class);
@@ -76,18 +71,17 @@ public class DistributedFastCp implements Tool {
   public static void main(String[] args) throws Exception {
     if (args.length < 5) {
       log.error("usage: hadoop jar hadoop-extras.jar com.sogou.hadoop.extras.tools.fastcp "
-          + "<srcNamenode> <srcDir> <dstNamenode> <dstDir> <resultDir> [level]");
+          + "<copy list dir> <src namenode> <dst namenode> <dst dir> <result dir>");
       System.exit(1);
     }
 
-    String srcNamenode = args[0];
-    String srcDir = args[1];
+    String copyListDir = args[0];
+    String srcNamenode = args[1];
     String dstNamenode = args[2];
     String dstDir = args[3];
     String resultDir = args[4];
-    int level = args.length >= 6 ? Integer.parseInt(args[5]) : DEFAULT_LEVEL;
 
     ToolRunner.run(
-        new DistributedFastCp(srcNamenode, srcDir, dstNamenode, dstDir, resultDir, level), args);
+        new DistributedFastCp(copyListDir, srcNamenode, dstNamenode, dstDir, resultDir), args);
   }
 }
