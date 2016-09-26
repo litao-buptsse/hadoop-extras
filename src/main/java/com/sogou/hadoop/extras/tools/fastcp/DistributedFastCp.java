@@ -1,0 +1,93 @@
+package com.sogou.hadoop.extras.tools.fastcp;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+
+/**
+ * Created by Tao Li on 25/09/2016.
+ */
+public class DistributedFastCp implements Tool {
+  private final static Log log = LogFactory.getLog(DistributedFastCp.class);
+
+  private Configuration conf;
+  private String srcNamenode;
+  private String srcDir;
+  private String dstNamenode;
+  private String dstDir;
+  private String outputDir;
+  private int level;
+
+  private final static int DEFAULT_LEVEL = 3;
+
+  public DistributedFastCp(String srcNamenode, String srcDir,
+                           String dstNamenode, String dstDir, String outputDir, int level) {
+    this.srcNamenode = srcNamenode;
+    this.srcDir = srcDir;
+    this.dstNamenode = dstNamenode;
+    this.dstDir = dstDir;
+    this.outputDir = outputDir;
+    this.level = level;
+  }
+
+  @Override
+  public int run(String[] strings) throws Exception {
+    Job job = new Job(getConf());
+
+    job.setJarByClass(DistributedFastCp.class);
+
+    job.setMapperClass(DistributedFastCpMapper.class);
+    job.setReducerClass(DistributedFastCpReducer.class);
+
+    job.setInputFormatClass(FastCpInputFormat.class);
+    FastCpInputFormat.setSrcNamenode(job, srcNamenode);
+    FastCpInputFormat.setSrcDir(job, srcDir);
+    FastCpInputFormat.setDstNamenode(job, dstNamenode);
+    FastCpInputFormat.setDstDir(job, dstDir);
+    FastCpInputFormat.setLevel(job, level);
+
+    job.setOutputFormatClass(TextOutputFormat.class);
+    TextOutputFormat.setOutputPath(job, new Path(outputDir));
+
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(Text.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(Text.class);
+
+    return job.waitForCompletion(true) ? 0 : 1;
+  }
+
+  @Override
+  public void setConf(Configuration configuration) {
+    conf = configuration;
+  }
+
+  @Override
+  public Configuration getConf() {
+    return conf;
+  }
+
+  public static void main(String[] args) throws Exception {
+    if (args.length < 5) {
+      log.error("usage: hadoop jar hadoop-extras.jar com.sogou.hadoop.extras.tools.fastcp "
+          + "<srcNamenode> <srcDir> <dstNamenode> <dstDir> <resultDir> [level]");
+      System.exit(1);
+    }
+
+    String srcNamenode = args[0];
+    String srcDir = args[1];
+    String dstNamenode = args[2];
+    String dstDir = args[3];
+    String resultDir = args[4];
+    int level = args.length >= 6 ? Integer.parseInt(args[5]) : DEFAULT_LEVEL;
+
+    ToolRunner.run(
+        new DistributedFastCp(srcNamenode, srcDir, dstNamenode, dstDir, resultDir, level), args);
+  }
+}

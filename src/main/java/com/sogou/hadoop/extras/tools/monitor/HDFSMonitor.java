@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.monitor;
+package com.sogou.hadoop.extras.tools.monitor;
 
 import com.sogou.hadoop.extras.common.CommonUtils;
 import org.influxdb.InfluxDB;
@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by Tao Li on 2016/8/24.
  */
-public class HDFSMonitor {
+public class HdfsMonitor {
   private static Map<String, Map<String, Map<String, String>>> NAMENODE_INFO = new HashMap<>();
   private final static String RETERNTION_POLICY = "two_month";
 
@@ -24,8 +24,8 @@ public class HDFSMonitor {
     String cluster = "Sunshine";
     String nameSpace1 = "SunshineNameNode";
     String nameSpace2 = "SunshineNameNode2";
-    NAMENODE_INFO.put(cluster, new HashMap<>());
-    NAMENODE_INFO.get(cluster).put(nameSpace1, new HashMap<>());
+    NAMENODE_INFO.put(cluster, new HashMap<String, Map<String, String>>());
+    NAMENODE_INFO.get(cluster).put(nameSpace1, new HashMap<String, String>());
     NAMENODE_INFO.get(cluster).get(nameSpace1).put("nn1", "master01.sunshine.nm.ted");
     NAMENODE_INFO.get(cluster).get(nameSpace1).put("nn2", "master02.sunshine.nm.ted");
     // NAMENODE_INFO.get(cluster).put(nameSpace2, new HashMap<>());
