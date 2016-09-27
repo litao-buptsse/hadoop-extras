@@ -49,41 +49,40 @@ public class DistributedFastCpMapper extends Mapper<Text, Text, Text, Text> {
       String[] arr = line.split("\\s+");
       if (arr == null || arr.length != 8) {
         log.error("invalid src file info: " + line);
-        continue;
-      }
-
-      String permission = arr[0];
-      boolean isFile = permission.startsWith("-");
-      String srcPath = arr[7];
-      PathData realSrcPath = new PathData(srcNamenode + srcPath, context.getConfiguration());
-      PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath, context.getConfiguration());
-
-      if (isFile) {
-        // fastcp
-        requests.clear();
-        requests.add(new FastCopy.FastFileCopyRequest(realSrcPath.path, realDstPath.path,
-            realSrcPath.fs, realDstPath.fs));
-        try {
-          fastCopy.copy(requests);
-          log.info("succeed fastcp: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
-        } catch (Exception e) {
-          log.error("failed fastcp: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
-          context.write(new Text(srcNamenode + FastCpInputSplit.FIELD_SEPERATOR
-              + srcPath + FastCpInputSplit.FIELD_SEPERATOR
-              + dstNamenode + FastCpInputSplit.FIELD_SEPERATOR
-              + dstPath), new Text("FAIL"));
-        }
       } else {
-        // mkdir
-        try {
-          realDstPath.fs.mkdirs(realDstPath.path);
-          log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
-        } catch (IOException e) {
-          log.error("failed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
-          context.write(new Text(srcNamenode + FastCpInputSplit.FIELD_SEPERATOR
-              + srcPath + FastCpInputSplit.FIELD_SEPERATOR
-              + dstNamenode + FastCpInputSplit.FIELD_SEPERATOR
-              + dstPath), new Text("FAIL"));
+        String permission = arr[0];
+        boolean isFile = permission.startsWith("-");
+        String srcPath = arr[7];
+        PathData realSrcPath = new PathData(srcNamenode + srcPath, context.getConfiguration());
+        PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath, context.getConfiguration());
+
+        if (isFile) {
+          // fastcp
+          requests.clear();
+          requests.add(new FastCopy.FastFileCopyRequest(realSrcPath.path, realDstPath.path,
+              realSrcPath.fs, realDstPath.fs));
+          try {
+            fastCopy.copy(requests);
+            log.info("succeed fastcp: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+          } catch (Exception e) {
+            log.error("failed fastcp: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+            context.write(new Text(srcNamenode + FastCpInputSplit.FIELD_SEPERATOR
+                + srcPath + FastCpInputSplit.FIELD_SEPERATOR
+                + dstNamenode + FastCpInputSplit.FIELD_SEPERATOR
+                + dstPath), new Text("FAIL"));
+          }
+        } else {
+          // mkdir
+          try {
+            realDstPath.fs.mkdirs(realDstPath.path);
+            log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+          } catch (IOException e) {
+            log.error("failed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+            context.write(new Text(srcNamenode + FastCpInputSplit.FIELD_SEPERATOR
+                + srcPath + FastCpInputSplit.FIELD_SEPERATOR
+                + dstNamenode + FastCpInputSplit.FIELD_SEPERATOR
+                + dstPath), new Text("FAIL"));
+          }
         }
       }
 

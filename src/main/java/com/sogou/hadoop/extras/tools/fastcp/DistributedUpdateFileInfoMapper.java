@@ -1,0 +1,52 @@
+package com.sogou.hadoop.extras.tools.fastcp;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.permission.FsPermission;
+import org.apache.hadoop.fs.shell.PathData;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+
+/**
+ * Created by Tao Li on 25/09/2016.
+ */
+public class DistributedUpdateFileInfoMapper extends Mapper<Text, Text, Text, Text> {
+  private final Log log = LogFactory.getLog(DistributedUpdateFileInfoMapper.class);
+
+  @Override
+  public void run(Context context) throws IOException, InterruptedException {
+    UpdateFileInfoInputSplit split = (UpdateFileInfoInputSplit) context.getInputSplit();
+    PathData updateListPath = new PathData(split.getUpdateListPath(), context.getConfiguration());
+    String namenode = split.getNamenode();
+
+    BufferedReader reader = new BufferedReader(new InputStreamReader(updateListPath.fs.open(updateListPath.path)));
+    String line = reader.readLine();
+    while (line != null) {
+      String[] arr = line.split("\\s+");
+      if (arr == null || arr.length != 8) {
+        log.error("invalid src file info: " + line);
+      } else {
+        String permission = arr[0];
+        String owner = arr[2];
+        String group = arr[3];
+        try {
+          PathData path = new PathData(namenode + arr[7], context.getConfiguration());
+          path.fs.setOwner(path.path, owner, group);
+          log.info("succeed chown: " + owner + ", " + group + ", " + path.path.toString());
+          path.fs.setPermission(path.path, FsPermission.valueOf(permission));
+          log.info("succeed chmod: " + permission + ", " + path.path.toString());
+        } catch (IOException e) {
+          log.error("failed update file info: " + namenode + ", " + line);
+          context.write(new Text(namenode + UpdateFileInfoInputSplit.FIELD_SEPERATOR + line), new Text("FAIL"));
+        }
+      }
+
+      line = reader.readLine();
+    }
+    reader.close();
+  }
+}
