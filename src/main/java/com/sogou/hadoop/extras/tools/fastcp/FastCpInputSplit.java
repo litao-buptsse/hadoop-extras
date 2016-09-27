@@ -20,6 +20,7 @@ public class FastCpInputSplit extends InputSplit implements Writable {
   private String srcNamenode;
   private String dstNamenode;
   private String dstPath;
+  private String type;
 
   public static String FIELD_SEPERATOR = "\001";
 
@@ -27,11 +28,12 @@ public class FastCpInputSplit extends InputSplit implements Writable {
   }
 
   public FastCpInputSplit(String copyListPath,
-                          String srcNamenode, String dstNamenode, String dstPath) {
+                          String srcNamenode, String dstNamenode, String dstPath, String type) {
     this.copyListPath = copyListPath;
     this.srcNamenode = srcNamenode;
     this.dstNamenode = dstNamenode;
     this.dstPath = dstPath;
+    this.type = type;
   }
 
   public String getCopyListPath() {
@@ -50,6 +52,10 @@ public class FastCpInputSplit extends InputSplit implements Writable {
     return dstPath;
   }
 
+  public String getType() {
+    return type;
+  }
+
   @Override
   public long getLength() throws IOException, InterruptedException {
     return 0;
@@ -62,24 +68,25 @@ public class FastCpInputSplit extends InputSplit implements Writable {
 
   @Override
   public void write(DataOutput out) throws IOException {
-    Text.writeString(out, copyListPath + FIELD_SEPERATOR
-        + srcNamenode + FIELD_SEPERATOR + dstNamenode + FIELD_SEPERATOR + dstPath);
-    log.info("split write: " + copyListPath + ", "
-        + srcNamenode + ", " + dstNamenode + ", " + dstPath);
+    Text.writeString(out, copyListPath + FIELD_SEPERATOR + srcNamenode + FIELD_SEPERATOR +
+        dstNamenode + FIELD_SEPERATOR + dstPath + FIELD_SEPERATOR + type);
+    log.info("split write: " + copyListPath + ", " + srcNamenode + ", " +
+        dstNamenode + ", " + dstPath + ", " + type);
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
     String data = Text.readString(in);
     String[] arr = data.split(FIELD_SEPERATOR);
-    if (arr == null || arr.length != 4) {
+    if (arr == null || arr.length != 5) {
       throw new IOException("invalid split data: " + data);
     }
     copyListPath = arr[0];
     srcNamenode = arr[1];
     dstNamenode = arr[2];
     dstPath = arr[3];
+    type = arr[4];
     log.info("split read: " + copyListPath + ", "
-        + srcNamenode + ", " + dstNamenode + ", " + dstPath);
+        + srcNamenode + ", " + dstNamenode + ", " + dstPath + ", " + type);
   }
 }

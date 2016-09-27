@@ -20,6 +20,7 @@ public class FastCpInputFormat extends InputFormat {
   private final static String SRC_NAMENODE = "srcNamenode";
   private final static String DST_NAMENODE = "dstNamenode";
   private final static String DST_DIR = "dstDir";
+  private final static String TYPE = "type";
 
   public static void setCopyListDir(Job job, String copyListDir) {
     job.getConfiguration().set(COPY_LIST_DIR, copyListDir);
@@ -37,6 +38,10 @@ public class FastCpInputFormat extends InputFormat {
     job.getConfiguration().set(DST_DIR, dstDir);
   }
 
+  public static void setType(Job job, String type) {
+    job.getConfiguration().set(TYPE, type);
+  }
+
   @Override
   public List<InputSplit> getSplits(JobContext jobContext) throws IOException, InterruptedException {
     Configuration conf = jobContext.getConfiguration();
@@ -45,13 +50,14 @@ public class FastCpInputFormat extends InputFormat {
     String srcNamenode = conf.get(SRC_NAMENODE);
     String dstNamenode = conf.get(DST_NAMENODE);
     String dstDir = conf.get(DST_DIR);
+    String type = conf.get(TYPE);
 
     List<InputSplit> splits = new ArrayList<>();
     for (PathData copyListFile : copyListDir.getDirectoryContents()) {
       splits.add(new FastCpInputSplit(copyListFile.path.toString(),
-          srcNamenode, dstNamenode, dstDir));
+          srcNamenode, dstNamenode, dstDir, type));
       log.info("add fastcp split: " + copyListFile.path.toString() + ", "
-          + srcNamenode + ", " + dstNamenode + ", " + dstDir);
+          + srcNamenode + ", " + dstNamenode + ", " + dstDir + ", " + type);
     }
 
     return splits;
