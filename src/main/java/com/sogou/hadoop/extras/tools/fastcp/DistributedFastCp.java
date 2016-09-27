@@ -19,6 +19,10 @@ public class DistributedFastCp implements Tool {
   public final static String TYPE_NORMAL = "normal";
   public final static String TYPE_UPDATE = "update";
 
+  public final static String OP_TYPE_ADD = "ADD";
+  public final static String OP_TYPE_DELETE = "DELETE";
+  public final static String OP_TYPE_UPDATE = "UPDATE";
+
   private Configuration conf;
   private String copyListDir;
   private String srcNamenode;

@@ -20,10 +20,6 @@ import java.util.List;
 public class DistributedFastCpMapper extends Mapper<Text, Text, Text, Text> {
   private final Log log = LogFactory.getLog(DistributedFastCpMapper.class);
 
-  private final static String OP_TYPE_ADD = "ADD";
-  private final static String OP_TYPE_DELETE = "DELETE";
-  private final static String OP_TYPE_UPDATE = "UPDATE";
-
   @Override
   public void run(Context context) throws IOException, InterruptedException {
     FastCpInputSplit split = (FastCpInputSplit) context.getInputSplit();
@@ -83,11 +79,11 @@ public class DistributedFastCpMapper extends Mapper<Text, Text, Text, Text> {
             String srcPath = arr[8];
 
             try {
-              if (opType.equals(OP_TYPE_ADD)) {
+              if (opType.equals(DistributedFastCp.OP_TYPE_ADD)) {
                 create(context, srcNamenode, srcPath, dstNamenode, dstPath, permission, fastCopy, requests);
-              } else if (opType.equals(OP_TYPE_DELETE)) {
+              } else if (opType.equals(DistributedFastCp.OP_TYPE_DELETE)) {
                 delete(context, srcPath, dstNamenode, dstPath);
-              } else if (opType.equals(OP_TYPE_UPDATE)) {
+              } else if (opType.equals(DistributedFastCp.OP_TYPE_UPDATE)) {
                 update(context, srcNamenode, srcPath, dstNamenode, dstPath, permission, fastCopy, requests);
               }
             } catch (Exception e) {

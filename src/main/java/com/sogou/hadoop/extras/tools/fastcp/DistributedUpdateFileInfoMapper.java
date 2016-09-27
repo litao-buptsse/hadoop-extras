@@ -27,18 +27,27 @@ public class DistributedUpdateFileInfoMapper extends Mapper<Text, Text, Text, Te
     String line = reader.readLine();
     while (line != null) {
       String[] arr = line.split("\\s+");
-      if (arr == null || arr.length != 8) {
+      if (arr == null || (arr.length != 8 && arr.length != 9)) {
         log.error("invalid src file info: " + line);
       } else {
-        String permission = arr[0];
-        String owner = arr[2];
-        String group = arr[3];
         try {
-          PathData path = new PathData(namenode + arr[7], context.getConfiguration());
-          path.fs.setOwner(path.path, owner, group);
-          log.info("succeed chown: " + owner + ", " + group + ", " + path.path.toString());
-          path.fs.setPermission(path.path, FsPermission.valueOf(permission));
-          log.info("succeed chmod: " + permission + ", " + path.path.toString());
+          if (arr.length == 8) {
+            String permission = arr[0];
+            String owner = arr[2];
+            String group = arr[3];
+            String path = arr[7];
+            updateFileInfo(context, namenode, path, owner, group, permission);
+          } else if (arr.length == 9) {
+            String opType = arr[0];
+            String permission = arr[1];
+            String owner = arr[3];
+            String group = arr[4];
+            String path = arr[8];
+            if (opType.equals(DistributedFastCp.OP_TYPE_ADD) ||
+                opType.equals(DistributedFastCp.OP_TYPE_UPDATE)) {
+              updateFileInfo(context, namenode, path, owner, group, permission);
+            }
+          }
         } catch (IOException e) {
           log.error("failed update file info: " + namenode + ", " + line);
           context.write(new Text(namenode + UpdateFileInfoInputSplit.FIELD_SEPERATOR + line), new Text("FAIL"));
@@ -48,5 +57,14 @@ public class DistributedUpdateFileInfoMapper extends Mapper<Text, Text, Text, Te
       line = reader.readLine();
     }
     reader.close();
+  }
+
+  private void updateFileInfo(Context context, String namenode, String path,
+                              String owner, String group, String permission) throws IOException {
+    PathData pathData = new PathData(namenode + path, context.getConfiguration());
+    pathData.fs.setOwner(pathData.path, owner, group);
+    log.info("succeed chown: " + owner + ", " + group + ", " + pathData.path.toString());
+    pathData.fs.setPermission(pathData.path, FsPermission.valueOf(permission));
+    log.info("succeed chmod: " + permission + ", " + pathData.path.toString());
   }
 }
