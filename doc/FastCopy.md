@@ -15,7 +15,7 @@ mkdir copylist; split -l 50000 copylist.txt copylist/mydir
 hadoop fs -put copylist > /tmp
 ```
 
-### 3. 根据文件列表将/dir由ns1拷贝至ns2
+### 3. 根据文件列表将/mydir由ns1拷贝至ns2
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
@@ -60,7 +60,7 @@ mkdir copylist_diff; split -l 50000 copylist_diff.txt copylist_diff/mydir
 hadoop fs -put copylist_diff > /tmp
 ```
 
-### 5. 根据diff文件列表,将增量/dir由ns1拷贝至ns2
+### 5. 根据diff文件列表,将/mydir增量由ns1拷贝至ns2
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
