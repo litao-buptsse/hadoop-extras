@@ -17,18 +17,20 @@ public class DistributedUpdateFileInfo implements Tool {
   private final static Log log = LogFactory.getLog(DistributedUpdateFileInfo.class);
 
   private Configuration conf;
-  private String updateListDir;
-  private String namenode;
-  private String resultDir;
-
-  public DistributedUpdateFileInfo(String updateListDir, String namenode, String resultDir) {
-    this.updateListDir = updateListDir;
-    this.namenode = namenode;
-    this.resultDir = resultDir;
-  }
 
   @Override
-  public int run(String[] strings) throws Exception {
+  public int run(String[] args) throws Exception {
+    if (args.length < 3) {
+      log.error("usage: hadoop jar hadoop-extras.jar " +
+          "com.sogou.hadoop.extras.tools.fastcp.DistributedUpdateFileInfo " +
+          "<updateListDir> <namenode> <resultDiir>");
+      return 1;
+    }
+
+    String updateListDir = args[0];
+    String namenode = args[1];
+    String resultDir = args[2];
+
     Job job = new Job(getConf());
 
     job.setJarByClass(DistributedUpdateFileInfo.class);
@@ -62,18 +64,6 @@ public class DistributedUpdateFileInfo implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 3) {
-      log.error("usage: hadoop jar hadoop-extras.jar " +
-          "com.sogou.hadoop.extras.tools.fastcp.DistributedUpdateFileInfo " +
-          "<updateListDir> <namenode> <resultDiir>");
-      System.exit(1);
-    }
-
-    String updateListDir = args[0];
-    String namenode = args[1];
-    String resultDiir = args[2];
-
-    ToolRunner.run(
-        new DistributedUpdateFileInfo(updateListDir, namenode, resultDiir), args);
+    ToolRunner.run(new DistributedUpdateFileInfo(), args);
   }
 }

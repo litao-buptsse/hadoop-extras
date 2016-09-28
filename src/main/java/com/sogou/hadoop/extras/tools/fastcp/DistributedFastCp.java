@@ -24,25 +24,25 @@ public class DistributedFastCp implements Tool {
   public final static String OP_TYPE_UPDATE = "UPDATE";
 
   private Configuration conf;
-  private String copyListDir;
-  private String srcNamenode;
-  private String dstNamenode;
-  private String dstDir;
-  private String resultDir;
-  private String type;
-
-  public DistributedFastCp(String copyListDir, String srcNamenode,
-                           String dstNamenode, String dstDir, String resultDir, String type) {
-    this.copyListDir = copyListDir;
-    this.srcNamenode = srcNamenode;
-    this.dstNamenode = dstNamenode;
-    this.dstDir = dstDir;
-    this.resultDir = resultDir;
-    this.type = type;
-  }
 
   @Override
-  public int run(String[] strings) throws Exception {
+  public int run(String[] args) throws Exception {
+    if (args.length < 5) {
+      log.error("usage: hadoop jar hadoop-extras.jar com.sogou.hadoop.extras.tools.fastcp "
+          + "<copy list dir> <src namenode> <dst namenode> <dst dir> <result dir> [normal|update]");
+      return 1;
+    }
+
+    String copyListDir = args[0];
+    String srcNamenode = args[1];
+    String dstNamenode = args[2];
+    String dstDir = args[3];
+    String resultDir = args[4];
+    String type = TYPE_NORMAL;
+    if (args.length >= 6 && args[5].equals(TYPE_UPDATE)) {
+      type = TYPE_UPDATE;
+    }
+
     Job job = new Job(getConf());
 
     job.setJarByClass(DistributedFastCp.class);
@@ -79,23 +79,6 @@ public class DistributedFastCp implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 5) {
-      log.error("usage: hadoop jar hadoop-extras.jar com.sogou.hadoop.extras.tools.fastcp "
-          + "<copy list dir> <src namenode> <dst namenode> <dst dir> <result dir> [normal|update]");
-      System.exit(1);
-    }
-
-    String copyListDir = args[0];
-    String srcNamenode = args[1];
-    String dstNamenode = args[2];
-    String dstDir = args[3];
-    String resultDir = args[4];
-    String type = TYPE_NORMAL;
-    if (args.length >= 6 && args[5].equals(TYPE_UPDATE)) {
-      type = TYPE_UPDATE;
-    }
-
-    ToolRunner.run(
-        new DistributedFastCp(copyListDir, srcNamenode, dstNamenode, dstDir, resultDir, type), args);
+    ToolRunner.run(new DistributedFastCp(), args);
   }
 }

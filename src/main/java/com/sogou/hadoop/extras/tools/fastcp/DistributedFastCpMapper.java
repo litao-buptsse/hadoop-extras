@@ -126,8 +126,10 @@ public class DistributedFastCpMapper extends Mapper<Text, Text, Text, Text> {
     } else {
       // mkdir
       try {
-        realDstPath.fs.mkdirs(realDstPath.path);
-        log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+        if (!realDstPath.exists) {
+          realDstPath.fs.mkdirs(realDstPath.path);
+          log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
+        }
       } catch (IOException e) {
         log.error("failed mkdir: " + realSrcPath.path.toString() + ", " + realDstPath.path.toString());
         throw new IOException(e);

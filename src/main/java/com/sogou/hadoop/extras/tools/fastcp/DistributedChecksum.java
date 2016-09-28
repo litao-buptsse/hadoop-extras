@@ -17,21 +17,21 @@ public class DistributedChecksum implements Tool {
   private final static Log log = LogFactory.getLog(DistributedChecksum.class);
 
   private Configuration conf;
-  private String checksumListDir;
-  private String srcNamenode;
-  private String dstNamenode;
-  private String resultDir;
-
-  public DistributedChecksum(String checksumListDir,
-                             String srcNamenode, String dstNamenode, String resultDir) {
-    this.checksumListDir = checksumListDir;
-    this.srcNamenode = srcNamenode;
-    this.dstNamenode = dstNamenode;
-    this.resultDir = resultDir;
-  }
 
   @Override
-  public int run(String[] strings) throws Exception {
+  public int run(String[] args) throws Exception {
+    if (args.length < 4) {
+      log.error("usage: hadoop jar hadoop-extras.jar " +
+          "com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum " +
+          "<checksumListDir> <srcNamenode> <dstNamenode> <resultDiir>");
+      return 1;
+    }
+
+    String checksumListDir = args[0];
+    String srcNamenode = args[1];
+    String dstNamenode = args[2];
+    String resultDir = args[3];
+
     Job job = new Job(getConf());
 
     job.setJarByClass(DistributedChecksum.class);
@@ -66,19 +66,6 @@ public class DistributedChecksum implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length < 4) {
-      log.error("usage: hadoop jar hadoop-extras.jar " +
-          "com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum " +
-          "<checksumListDir> <srcNamenode> <dstNamenode> <resultDiir>");
-      System.exit(1);
-    }
-
-    String checksumListDir = args[0];
-    String srcNamenode = args[1];
-    String dstNamenode = args[2];
-    String resultDiir = args[3];
-
-    ToolRunner.run(
-        new DistributedChecksum(checksumListDir, srcNamenode, dstNamenode, resultDiir), args);
+    ToolRunner.run(new DistributedChecksum(), args);
   }
 }
