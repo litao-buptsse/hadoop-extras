@@ -31,6 +31,14 @@ hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
   /tmp/copylist hdfs://ns2 /tmp/updatefileinfo_result
 ```
 
+### 5. 比较Checksum
+
+```
+hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
+  com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum \
+  /tmp/copylist hdfs://ns1 hdfs://ns2 /tmp/checksum_result
+```
+
 ## 第二步:增量拷贝(停服务)
 
 ### 1. 将ns1进入safemode,只读不可写
@@ -76,7 +84,15 @@ hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
   /tmp/copylist_diff hdfs://ns2 /tmp/updatefileinfo_result_diff
 ```
 
-### 7. 将ns1离开safemode,切分完毕
+### 7. 比较Checksum
+
+```
+hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
+  com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum \
+  /tmp/copylist_diff hdfs://ns1 hdfs://ns2 /tmp/checksum_result_diff
+```
+
+### 8. 将ns1离开safemode,切分完毕
 
 ```
 hadoop dfsadmin -safemode leave -Dfs.defaultFS=hdfs://ns1
