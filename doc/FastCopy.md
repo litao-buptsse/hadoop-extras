@@ -15,28 +15,20 @@ mkdir copylist; split -l 50000 copylist.txt copylist/mydir
 hadoop fs -put copylist > /tmp
 ```
 
-### 3. 根据文件列表将/mydir由ns1拷贝至ns2
+### 3. 根据文件列表将/mydir由ns1拷贝至ns2(同时做chmod、chown)
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedFastCp \
-  /tmp/copylist hdfs://ns1 hdfs://ns2 / /tmp/fastcp_result
+  com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy \
+  /tmp/copylist hdfs://ns1 hdfs://ns2 / /tmp/fastcp_result FASTCOPY
 ```
 
-### 4. 对拷贝至ns2的文件目录做chmod、chown
-
-```
-hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedUpdateFileInfo
-  /tmp/copylist hdfs://ns2 /tmp/updatefileinfo_result
-```
-
-### 5. 比较Checksum
+### 4. 比较Checksum
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum \
-  /tmp/copylist hdfs://ns1 hdfs://ns2 /tmp/checksum_result
+  com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy \
+  /tmp/copylist hdfs://ns1 hdfs://ns2 / /tmp/checksum_result CHECKSUM
 ```
 
 ## 第二步:增量拷贝(停服务)
@@ -57,7 +49,7 @@ hadoop fs -ls -R /mydir > copylist_new.txt
 
 ```
 bin/hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.hdfs.DiffFileList \
+  com.sogou.hadoop.extras.tools.hdfs.fastcp.DiffFileList \
   copylist.txt copylist_new.txt > copylist_diff.txt
 ```
 
@@ -68,31 +60,23 @@ mkdir copylist_diff; split -l 50000 copylist_diff.txt copylist_diff/mydir
 hadoop fs -put copylist_diff > /tmp
 ```
 
-### 5. 根据diff文件列表,将/mydir增量由ns1拷贝至ns2
+### 5. 根据diff文件列表,将/mydir增量由ns1拷贝至ns2(同时做chmod、chown)
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedFastCp \
-  /tmp/copylist_diff hdfs://ns1 hdfs://ns2 / /tmp/fastcp_result_diff update
+  com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy \
+  /tmp/copylist_diff hdfs://ns1 hdfs://ns2 / /tmp/fastcp_result_diff FASTCOPY
 ```
 
-### 6. 对增量拷贝至ns2的文件目录做chmod、chown
-
-```
-hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedUpdateFileInfo
-  /tmp/copylist_diff hdfs://ns2 /tmp/updatefileinfo_result_diff
-```
-
-### 7. 比较Checksum
+### 6. 比较Checksum
 
 ```
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.fastcp.DistributedChecksum \
-  /tmp/copylist_diff hdfs://ns1 hdfs://ns2 /tmp/checksum_result_diff
+  com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy \
+  /tmp/copylist_diff hdfs://ns1 hdfs://ns2 / /tmp/checksum_result_diff CHECKSUM
 ```
 
-### 8. 将ns1离开safemode,切分完毕
+### 7. 将ns1离开safemode,切分完毕
 
 ```
 hadoop dfsadmin -safemode leave -Dfs.defaultFS=hdfs://ns1

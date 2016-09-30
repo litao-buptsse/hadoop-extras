@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.fastcp;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,27 +13,27 @@ import java.io.IOException;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class FastCpInputSplit extends InputSplit implements Writable {
-  private final Log log = LogFactory.getLog(FastCpInputSplit.class);
+public class FastCopyInputSplit extends InputSplit implements Writable {
+  private final Log log = LogFactory.getLog(FastCopyInputSplit.class);
 
   private String copyListPath;
   private String srcNamenode;
   private String dstNamenode;
   private String dstPath;
-  private String type;
+  private String jobType;
 
   public static String FIELD_SEPERATOR = "\001";
 
-  public FastCpInputSplit() {
+  public FastCopyInputSplit() {
   }
 
-  public FastCpInputSplit(String copyListPath,
-                          String srcNamenode, String dstNamenode, String dstPath, String type) {
+  public FastCopyInputSplit(String copyListPath, String srcNamenode, String dstNamenode,
+                            String dstPath, String jobType) {
     this.copyListPath = copyListPath;
     this.srcNamenode = srcNamenode;
     this.dstNamenode = dstNamenode;
     this.dstPath = dstPath;
-    this.type = type;
+    this.jobType = jobType;
   }
 
   public String getCopyListPath() {
@@ -52,8 +52,19 @@ public class FastCpInputSplit extends InputSplit implements Writable {
     return dstPath;
   }
 
-  public String getType() {
-    return type;
+  public String getJobType() {
+    return jobType;
+  }
+
+  @Override
+  public String toString() {
+    return "FastCopyInputSplit{" +
+        "dstPath='" + dstPath + '\'' +
+        ", jobType='" + jobType + '\'' +
+        ", dstNamenode='" + dstNamenode + '\'' +
+        ", srcNamenode='" + srcNamenode + '\'' +
+        ", copyListPath='" + copyListPath + '\'' +
+        '}';
   }
 
   @Override
@@ -68,25 +79,24 @@ public class FastCpInputSplit extends InputSplit implements Writable {
 
   @Override
   public void write(DataOutput out) throws IOException {
-    Text.writeString(out, copyListPath + FIELD_SEPERATOR + srcNamenode + FIELD_SEPERATOR +
-        dstNamenode + FIELD_SEPERATOR + dstPath + FIELD_SEPERATOR + type);
-    log.info("split write: " + copyListPath + ", " + srcNamenode + ", " +
-        dstNamenode + ", " + dstPath + ", " + type);
+    String meta = copyListPath + FIELD_SEPERATOR + srcNamenode + FIELD_SEPERATOR +
+        dstNamenode + FIELD_SEPERATOR + dstPath + FIELD_SEPERATOR + jobType;
+    Text.writeString(out, meta);
+    log.info("split write: " + this.toString());
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
-    String data = Text.readString(in);
-    String[] arr = data.split(FIELD_SEPERATOR);
+    String meta = Text.readString(in);
+    String[] arr = meta.split(FIELD_SEPERATOR);
     if (arr == null || arr.length != 5) {
-      throw new IOException("invalid split data: " + data);
+      throw new IOException("invalid split data: " + meta);
     }
     copyListPath = arr[0];
     srcNamenode = arr[1];
     dstNamenode = arr[2];
     dstPath = arr[3];
-    type = arr[4];
-    log.info("split read: " + copyListPath + ", "
-        + srcNamenode + ", " + dstNamenode + ", " + dstPath + ", " + type);
+    jobType = arr[4];
+    log.info("split read: " + this.toString());
   }
 }
