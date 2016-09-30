@@ -11,4 +11,4 @@ listFile=$3
 
 export HADOOP_CLIENT_OPTS="-Xmx30g -Xms30g"
 
-bin/hadoop fs -Dfs.defaultFS=$srcNamenode -ls -R $srcDir > $listFile
+hadoop fs -Dfs.defaultFS=$srcNamenode -ls -R $srcDir > $listFile

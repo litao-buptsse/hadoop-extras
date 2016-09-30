@@ -21,8 +21,8 @@ mkdir -p full.$time/split
 ./split.sh full.$time/raw/$dirName full.$time/split/$dirName $dirName $mapTaskNum
 
 hdfsRoot=/tmp/fastcp/full.$time
-bin/hadoop fs -mkdir -p $hdfsRoot/copylist
-bin/hadoop fs -copyFromLocal full.$time/split/$dirName $hdfsRoot/copylist
+hadoop fs -mkdir -p $hdfsRoot/copylist
+hadoop fs -copyFromLocal full.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/fastcp.result/$dirName

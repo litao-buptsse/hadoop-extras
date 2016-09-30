@@ -23,8 +23,8 @@ mkdir -p diff.$time/split
 ./split.sh diff.$time/raw/${dirName}.diff diff.$time/split/$dirName $dirName $mapTaskNum
 
 hdfsRoot=/tmp/fastcp/diff.$time
-bin/hadoop fs -mkdir -p $hdfsRoot/copylist
-bin/hadoop fs -copyFromLocal diff.$time/split/$dirName $hdfsRoot/copylist
+hadoop fs -mkdir -p $hdfsRoot/copylist
+hadoop fs -copyFromLocal diff.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/fastcp.result/$dirName
