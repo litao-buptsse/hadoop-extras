@@ -14,6 +14,9 @@ if [ $# -ge 4 ]; then
 fi
 file_count=`wc -l $input | awk '{print $1}'`
 split_size=`expr ${file_count} / ${map_task_num}`
+if [ $split_size -eq 0 ]; then
+  split_size=1
+fi
 
 mkdir -p $output_dir
 split -l $split_size -a 5 $input $output_dir/$output_prefix.
