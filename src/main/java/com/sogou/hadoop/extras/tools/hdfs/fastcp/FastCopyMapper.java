@@ -196,8 +196,8 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
                         String dstNamenode, String dstPath) throws IOException {
       PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath,
           context.getConfiguration());
-      if (realDstPath.stat.isFile()) {
-        realDstPath.fs.delete(realDstPath.path, false);
+      if (realDstPath.exists) {
+        realDstPath.fs.delete(realDstPath.path, true);
         log.info("succeed delete: " + realDstPath.path.toString());
       }
     }
@@ -207,7 +207,11 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
                         String permission, String owner, String group,
                         FastCopy fastCopy,
                         List<FastCopy.FastFileCopyRequest> requests) throws IOException {
-      delete(srcPath, dstNamenode, dstPath);
+      PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath,
+          context.getConfiguration());
+      if (realDstPath.exists && realDstPath.stat.isFile()) {
+        delete(srcPath, dstNamenode, dstPath);
+      }
       create(srcNamenode, srcPath, dstNamenode, dstPath,
           permission, owner, group, fastCopy, requests);
     }

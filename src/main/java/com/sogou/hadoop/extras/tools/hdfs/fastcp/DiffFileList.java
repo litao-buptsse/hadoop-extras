@@ -46,8 +46,11 @@ public class DiffFileList {
         System.err.println("invalid src file info: " + line);
       } else {
         String path = arr[7];
-        FileInfo info = new FileInfo(line.substring(0, line.lastIndexOf(" ")));
-        srcMap.put(path, info);
+        // skip .Trash dir
+        if(!path.contains("/.Trash/")) {
+          FileInfo info = new FileInfo(line.substring(0, line.lastIndexOf(" ")));
+          srcMap.put(path, info);
+        }
       }
 
       line = reader.readLine();
@@ -68,17 +71,20 @@ public class DiffFileList {
         System.err.println("invalid dst file info: " + line);
       } else {
         String path = arr[7];
-        String info = line.substring(0, line.lastIndexOf(" "));
-        if (srcMap.containsKey(path)) {
-          // exists
-          srcMap.get(path).setExist(true);
-          if (!srcMap.get(path).getInfo().equals(info)) {
-            // update
-            System.out.println("UPDATE " + line);
+        // skip .Trash dir
+        if(!path.contains("/.Trash/")) {
+          String info = line.substring(0, line.lastIndexOf(" "));
+          if (srcMap.containsKey(path)) {
+            // exists
+            srcMap.get(path).setExist(true);
+            if (!srcMap.get(path).getInfo().equals(info)) {
+              // update
+              System.out.println("UPDATE " + line);
+            }
+          } else {
+            // not exists
+            System.out.println("ADD " + line);
           }
-        } else {
-          // not exists
-          System.out.println("ADD " + line);
         }
       }
 
