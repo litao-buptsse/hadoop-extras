@@ -190,6 +190,12 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
       // chmod
       realDstPath.fs.setPermission(realDstPath.path, FsPermission.valueOf(permission));
       log.info("succeed chmod: " + permission + ", " + realDstPath.path.toString());
+
+      // set times
+      realDstPath.fs.setTimes(realDstPath.path,
+          realSrcPath.stat.getModificationTime(), realSrcPath.stat.getAccessTime());
+      log.info("succeed set times: " + realDstPath.path.toString() + ", " +
+          realSrcPath.stat.getModificationTime() + ", " + realSrcPath.stat.getAccessTime());
     }
 
     private void delete(String srcPath,
