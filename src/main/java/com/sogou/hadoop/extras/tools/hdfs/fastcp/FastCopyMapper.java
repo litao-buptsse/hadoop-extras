@@ -127,6 +127,12 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     public void run(String srcNamenode, String dstNamenode, String dstPath,
                     String opType, String permission, String owner, String group,
                     String srcPath) throws IOException {
+      if (srcPath.contains("/.Trash/")) {
+        log.info("skip trash dir: " + opType + ", " +
+            srcNamenode + ", " + dstNamenode + ", " + srcPath + ", " + dstPath);
+        return;
+      }
+
       switch (opType) {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
@@ -235,6 +241,12 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     public void run(String srcNamenode, String dstNamenode, String dstPath, String opType,
                     String permission, String owner, String group,
                     String srcPath) throws IOException {
+      if (srcPath.contains("/.Trash/")) {
+        log.info("skip trash dir: " + opType + ", " +
+            srcNamenode + ", " + dstNamenode + ", " + srcPath + ", " + dstPath);
+        return;
+      }
+
       if (opType.equals(OP_TYPE_ADD) || opType.equals(OP_TYPE_UPDATE)) {
         if (!compareChecksum(srcNamenode, dstNamenode, srcPath, dstPath)) {
           throw new IOException("fail to compare checksum");
