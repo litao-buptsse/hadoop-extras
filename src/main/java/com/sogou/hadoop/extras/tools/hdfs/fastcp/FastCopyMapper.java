@@ -53,6 +53,8 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
       String line = reader.readLine();
       while (line != null) {
+        context.getCounter(FastCopyCounter.TOTAL).increment(1);
+
         String[] arr = line.split("\\s+");
         String permission = null;
         String owner = null;
@@ -79,9 +81,11 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
           try {
             task.run(srcNamenode, dstNamenode, dstPath,
                 opType, permission, owner, group, srcPath);
+            context.getCounter(FastCopyCounter.SUCC).increment(1);
           } catch (Exception e) {
             log.error("fail to run task: " + split.toString() + ", " + line, e);
             context.write(new Text(split.toString()), new Text(line));
+            context.getCounter(FastCopyCounter.FAIL).increment(1);
           }
         }
 
@@ -137,13 +141,16 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
+          context.getCounter(FastCopyCounter.ADD).increment(1);
           break;
         case OP_TYPE_DELETE:
           delete(srcPath, dstNamenode, dstPath);
+          context.getCounter(FastCopyCounter.DELETE).increment(1);
           break;
         case OP_TYPE_UPDATE:
           update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
+          context.getCounter(FastCopyCounter.UPDATE).increment(1);
           break;
         default:
           throw new IOException("no such opType: " + opType);
@@ -175,6 +182,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
             realSrcPath.fs, realDstPath.fs));
         try {
           fastCopy.copy(requests);
+          context.getCounter(FastCopyCounter.FASTCOPY).increment(1);
           log.info("succeed fastcp: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         } catch (Exception e) {
@@ -187,6 +195,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
           log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         }
+        context.getCounter(FastCopyCounter.MKDIR).increment(1);
       }
 
       // chown

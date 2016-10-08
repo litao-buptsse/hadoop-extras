@@ -19,6 +19,7 @@ public class FastCopyReducer extends Reducer<Text, Text, Text, Text> {
     for (Text value : values) {
       log.info("reduce output: " + key + ", " + value);
       context.write(key, value);
+      context.getCounter(FastCopyCounter.REDUCE).increment(1);
     }
   }
 }
