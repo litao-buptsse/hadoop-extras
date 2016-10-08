@@ -17,7 +17,8 @@ dirName=`echo $srcDir | sed 's/\///g'`
 
 mkdir -p diff.$time/raw
 ./list.sh $srcNamenode $srcDir diff.$time/raw/$dirName
-./diff.sh $oldCopyListFile diff.$time/raw/$dirName diff.$time/raw/${dirName}.diff
+./diff.sh $oldCopyListFile diff.$time/raw/$dirName diff.$time/raw/${dirName}.diff.tmp
+shuf diff.$time/raw/${dirName}.diff.tmp > diff.$time/raw/${dirName}.diff
 
 mkdir -p diff.$time/split
 ./split.sh diff.$time/raw/${dirName}.diff diff.$time/split/$dirName $dirName $mapTaskNum

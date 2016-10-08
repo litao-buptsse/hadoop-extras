@@ -9,13 +9,14 @@ srcNamenode=$1
 dstNamenode=$2
 srcDir=$3
 dstDir=/
-mapTaskNum=100
+mapTaskNum=50
 
 time=`date +%Y%m%d%H%M%s`
 dirName=`echo $srcDir | sed 's/\///g'`
 
 mkdir -p full.$time/raw
-./list.sh $srcNamenode $srcDir full.$time/raw/$dirName
+./list.sh $srcNamenode $srcDir full.$time/raw/$dirName.tmp
+shuf full.$time/raw/$dirName.tmp > full.$time/raw/$dirName
 
 mkdir -p full.$time/split
 ./split.sh full.$time/raw/$dirName full.$time/split/$dirName $dirName $mapTaskNum

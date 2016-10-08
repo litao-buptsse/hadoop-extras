@@ -9,7 +9,7 @@ copylist=$1
 copylist_new=$2
 copylist_diff=$3
 
-export HADOOP_CLIENT_OPTS="-Xmx40g -Xms40g"
+export HADOOP_CLIENT_OPTS="-Xmx50g -Xms50g"
 
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
   com.sogou.hadoop.extras.tools.hdfs.fastcp.DiffFileList \
