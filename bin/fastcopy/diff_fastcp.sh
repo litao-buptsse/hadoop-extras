@@ -10,7 +10,7 @@ dstNamenode=$2
 srcDir=$3
 dstDir=/
 oldCopyListFile=$4
-mapTaskNum=100
+mapTaskNum=50
 
 time=`date +%Y%m%d%H%M%S`
 dirName=`echo $srcDir | sed 's/\///g'`
