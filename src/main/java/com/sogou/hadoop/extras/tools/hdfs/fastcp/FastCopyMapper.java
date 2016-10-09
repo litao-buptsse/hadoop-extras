@@ -131,7 +131,9 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     public void run(String srcNamenode, String dstNamenode, String dstPath,
                     String opType, String permission, String owner, String group,
                     String srcPath) throws IOException {
-      if (srcPath.contains("/.Trash/") || srcPath.contains("/_temporary/")) {
+      if (srcPath.contains("/.Trash/") ||
+          srcPath.contains("/_temporary/") ||
+          srcPath.contains("/_distcp_logs_")) {
         log.info("skip dir: " + opType + ", " +
             srcNamenode + ", " + dstNamenode + ", " + srcPath + ", " + dstPath);
         return;

@@ -47,9 +47,13 @@ public class DiffFileList {
       } else {
         String path = arr[7];
         // skip .Trash dir
-        if (!path.contains("/.Trash/") && !path.contains("/_temporary/")) {
-          FileInfo info = new FileInfo(line.substring(0, line.lastIndexOf(" ")));
-          srcMap.put(path, info);
+        if (!path.contains("/.Trash/") &&
+            !path.contains("/_temporary/") &&
+            !path.contains("/_distcp_logs_")) {
+          String info = String.format("%s %s %s %s %s %s %s",
+              arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
+          FileInfo fileInfo = new FileInfo(info);
+          srcMap.put(path, fileInfo);
         }
       }
 
@@ -72,8 +76,11 @@ public class DiffFileList {
       } else {
         String path = arr[7];
         // skip .Trash dir
-        if (!path.contains("/.Trash/") && !path.contains("/_temporary/")) {
-          String info = line.substring(0, line.lastIndexOf(" "));
+        if (!path.contains("/.Trash/") &&
+            !path.contains("/_temporary/") &&
+            !path.contains("/_distcp_logs_")) {
+          String info = String.format("%s %s %s %s %s %s %s",
+              arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
           if (srcMap.containsKey(path)) {
             // exists
             srcMap.get(path).setExist(true);

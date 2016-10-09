@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 4 ]; then
-  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir> <oldCopyListFile>"
+if [ $# -ne 3 ]; then
+  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir>"
   exit 1
 fi
 
@@ -9,15 +9,15 @@ srcNamenode=$1
 dstNamenode=$2
 srcDir=$3
 dstDir=/
-oldCopyListFile=$4
 mapTaskNum=50
 
 time=`date +%Y%m%d%H%M%S`
 dirName=`echo $srcDir | sed 's/\///g'`
 
 mkdir -p diff.$time/raw
-./list.sh $srcNamenode $srcDir diff.$time/raw/$dirName
-./diff.sh $oldCopyListFile diff.$time/raw/$dirName diff.$time/raw/${dirName}.diff.tmp
+./list.sh $dstNamenode $srcDir diff.$time/raw/${dirName}.old
+./list.sh $srcNamenode $srcDir diff.$time/raw/${dirName}.new
+./diff.sh diff.$time/raw/${dirName}.old diff.$time/raw/${dirName}.new diff.$time/raw/${dirName}.diff.tmp
 shuf diff.$time/raw/${dirName}.diff.tmp > diff.$time/raw/${dirName}.diff
 
 mkdir -p diff.$time/split
