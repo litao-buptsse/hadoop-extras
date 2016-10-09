@@ -47,7 +47,7 @@ public class DiffFileList {
       } else {
         String path = arr[7];
         // skip .Trash dir
-        if(!path.contains("/.Trash/")) {
+        if (!path.contains("/.Trash/") && !path.contains("/_temporary/")) {
           FileInfo info = new FileInfo(line.substring(0, line.lastIndexOf(" ")));
           srcMap.put(path, info);
         }
@@ -72,7 +72,7 @@ public class DiffFileList {
       } else {
         String path = arr[7];
         // skip .Trash dir
-        if(!path.contains("/.Trash/")) {
+        if (!path.contains("/.Trash/") && !path.contains("/_temporary/")) {
           String info = line.substring(0, line.lastIndexOf(" "));
           if (srcMap.containsKey(path)) {
             // exists
