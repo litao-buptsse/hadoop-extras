@@ -22,4 +22,6 @@ hadoop jar \
   -Dmapreduce.reduce.memory.mb=6144 \
   -Dmapreduce.job.reduces=10 \
   -Dmapreduce.job.queuename="root.leftover" \
+  -Ddfs.fastcopy.max.datanode.errors=5000000 \
+  -Ddfs.fastcopy.rpc.timeout=120000 \
   $copyListDir $srcNamenode $dstNamenode $dstDir $resultDir $jobType
