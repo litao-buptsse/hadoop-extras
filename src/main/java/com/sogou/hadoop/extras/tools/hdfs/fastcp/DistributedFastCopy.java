@@ -18,6 +18,7 @@ public class DistributedFastCopy implements Tool {
 
   public final static String JOB_TYPE_FASTCOPY = "FASTCOPY";
   public final static String JOB_TYPE_CHECKSUM = "CHECKSUM";
+  public final static String JOB_TYPE_DELETE = "DELETE";
 
   private Configuration conf;
 

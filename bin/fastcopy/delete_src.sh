@@ -1,0 +1,30 @@
+#!/bin/bash
+
+if [ $# -ne 2 ]; then
+  echo "usage: $0 <srcNamenode> <srcDir>"
+  exit 1
+fi
+
+srcNamenode=$1
+dstNamenode=hdfs://xxx
+srcDir=$2
+dstDir=/yyy
+mapTaskNum=5
+
+time=`date +%Y%m%d%H%M%S`
+dirName=`echo $srcDir | sed 's/\///g'`
+
+mkdir -p delete.$time/raw
+./list.sh $srcNamenode $srcDir delete.$time/raw/${dirName}.src.tmp
+shuf delete.$time/raw/${dirName}.src.tmp > delete.$time/raw/${dirName}.src
+
+mkdir -p delete.$time/split
+./split.sh delete.$time/raw/${dirName}.src delete.$time/split/$dirName $dirName $mapTaskNum
+
+hdfsRoot=/tmp/fastcp/delete.$time
+hadoop fs -mkdir -p $hdfsRoot/copylist
+hadoop fs -copyFromLocal delete.$time/split/$dirName $hdfsRoot/copylist
+
+hdfsCopyListDir=$hdfsRoot/copylist/$dirName
+hdfsResultDir=$hdfsRoot/fastcp.result/$dirName
+./fastcp.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DELETE

@@ -32,6 +32,8 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
         return new FastCopyTask(context);
       case DistributedFastCopy.JOB_TYPE_CHECKSUM:
         return new ChecksumTask(context);
+      case DistributedFastCopy.JOB_TYPE_DELETE:
+        return new DeleteTask(context);
       default:
         throw new IOException("no such jobType: " + jobType);
     }
@@ -304,6 +306,31 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
             realSrcPath.path.toString() + ", " + realDstPath.path.toString());
         return false;
       }
+    }
+  }
+
+  class DeleteTask implements MapperTask {
+    private Context context;
+
+    public DeleteTask(Context context) {
+      this.context = context;
+    }
+
+    @Override
+    public void run(String srcNamenode, String dstNamenode, String dstPath, String opType,
+                    String permission, String owner, String group,
+                    String srcPath) throws IOException {
+      PathData realSrcPath = new PathData(srcNamenode + srcPath,
+          context.getConfiguration());
+      if (realSrcPath.exists && realSrcPath.stat.isFile()) {
+        realSrcPath.fs.delete(realSrcPath.path, false);
+        log.info("succeed delete: " + realSrcPath.path.toString());
+      }
+    }
+
+    @Override
+    public void kill() throws IOException {
+
     }
   }
 }
