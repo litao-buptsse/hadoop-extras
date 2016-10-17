@@ -311,20 +311,34 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
   class DeleteTask implements MapperTask {
     private Context context;
+    private boolean isRecursive;
 
     public DeleteTask(Context context) {
       this.context = context;
+      this.isRecursive = context.getConfiguration().
+          getBoolean("com.sogou.hadoop.extras.hdfs.fastcp.is-delete-recursive", false);
     }
 
     @Override
     public void run(String srcNamenode, String dstNamenode, String dstPath, String opType,
                     String permission, String owner, String group,
                     String srcPath) throws IOException {
+      // skip delete dir /user/xxx and /user/xxx/.Trash
+      if (srcPath.startsWith("/user") &&
+          (srcPath.split("/").length == 3 ||
+              srcPath.split("/").length == 4 && srcPath.endsWith(".Trash"))) {
+        return;
+      }
+
       PathData realSrcPath = new PathData(srcNamenode + srcPath,
           context.getConfiguration());
-      if (realSrcPath.exists && realSrcPath.stat.isFile()) {
-        realSrcPath.fs.delete(realSrcPath.path, false);
-        log.info("succeed delete: " + realSrcPath.path.toString());
+
+      if (realSrcPath.exists) {
+        if (realSrcPath.stat.isFile() || realSrcPath.stat.isDirectory() && isRecursive) {
+          realSrcPath.fs.delete(realSrcPath.path, true);
+          context.getCounter(FastCopyCounter.DELETE).increment(1);
+          log.info("succeed delete: " + realSrcPath.path.toString());
+        }
       }
     }
 

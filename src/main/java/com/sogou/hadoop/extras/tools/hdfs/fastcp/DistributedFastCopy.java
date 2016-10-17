@@ -38,7 +38,9 @@ public class DistributedFastCopy implements Tool {
     String resultDir = args[4];
 
     String jobType = args.length >= 6 ? args[5].toUpperCase() : JOB_TYPE_FASTCOPY;
-    if (!jobType.equals(JOB_TYPE_FASTCOPY) && !jobType.equals(JOB_TYPE_CHECKSUM)) {
+    if (!jobType.equals(JOB_TYPE_FASTCOPY) &&
+        !jobType.equals(JOB_TYPE_CHECKSUM) &&
+        !jobType.equals(JOB_TYPE_DELETE)) {
       log.error("invalid fastcp type: " + jobType);
       return 1;
     }
