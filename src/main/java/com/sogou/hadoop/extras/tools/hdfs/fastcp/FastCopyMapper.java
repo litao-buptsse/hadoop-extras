@@ -120,7 +120,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
         cArgs[0] = Configuration.class;
         cArgs[1] = int.class;
         cArgs[2] = boolean.class;
-        fastCopy = clazz.getDeclaredConstructor(cArgs).
+        fastCopy = (FastCopy) clazz.getDeclaredConstructor(cArgs).
             newInstance(context.getConfiguration(), 1, false);
       } catch (Exception e) {
         throw new IOException("fail to create fastcopy instance", e);
