@@ -20,7 +20,8 @@ public class DirStatistics implements Tool {
   private Configuration conf;
   private final static long HOT_DATA_THRESHOLD = 1000L * 3600 * 24 * 30;
   private final static long WARM_DATA_THRESHOLD = 1000L * 3600 * 24 * 30 * 6;
-  private final static String MONTH_TIMEFORMAT = "yyyyMM";
+  private final static String YEAR_TIMEFORMAT = "yyyy";
+  private final static long NOW = System.currentTimeMillis();
 
   enum DataTemperature {
     HOT,
@@ -78,17 +79,17 @@ public class DirStatistics implements Tool {
       long modificationTime = root.stat.getModificationTime();
       long accessTime = root.stat.getAccessTime();
 
-      DataTemperature temperature = calculateDataTemperature(modificationTime, accessTime);
+      DataTemperature temperature = calculateDataTemperature(accessTime);
       putOrIncrease(info.fileNumPerTemperatures, temperature.toString(), 1L);
       putOrIncrease(info.sizePerTemperatures, temperature.toString(), size);
 
-      String modificationMonth = convertMillisecondsToString(modificationTime, MONTH_TIMEFORMAT);
-      putOrIncrease(info.fileNumPerModificationTimes, modificationMonth, 1L);
-      putOrIncrease(info.sizePerModificationTimes, modificationMonth, size);
+      String modificationYear = convertMillisecondsToString(modificationTime, YEAR_TIMEFORMAT);
+      putOrIncrease(info.fileNumPerModificationTimes, modificationYear, 1L);
+      putOrIncrease(info.sizePerModificationTimes, modificationYear, size);
 
-      String accessMonth = convertMillisecondsToString(accessTime, MONTH_TIMEFORMAT);
-      putOrIncrease(info.fileNumPerAccessTimes, accessMonth, 1L);
-      putOrIncrease(info.sizePerAccessTimes, accessMonth, size);
+      String accessYear = convertMillisecondsToString(accessTime, YEAR_TIMEFORMAT);
+      putOrIncrease(info.fileNumPerAccessTimes, accessYear, 1L);
+      putOrIncrease(info.sizePerAccessTimes, accessYear, size);
     } else {
       info.dirNum += 1;
       try {
@@ -110,8 +111,8 @@ public class DirStatistics implements Tool {
     return new SimpleDateFormat(format).format(new Date(milliseconds)).toString();
   }
 
-  private static DataTemperature calculateDataTemperature(long modificationTime, long accessTime) {
-    long diff = accessTime - modificationTime;
+  private static DataTemperature calculateDataTemperature(long accessTime) {
+    long diff = NOW - accessTime;
     if (diff <= HOT_DATA_THRESHOLD) {
       return DataTemperature.HOT;
     } else {
