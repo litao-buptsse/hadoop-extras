@@ -10,10 +10,12 @@ import java.util.Map;
 public class DiffFileList {
   static class FileInfo {
     private String info;
+    private String time;
     private boolean exist = false;
 
-    public FileInfo(String info) {
+    public FileInfo(String info, String time) {
       this.info = info;
+      this.time = time;
     }
 
     public void setExist(boolean exist) {
@@ -27,11 +29,20 @@ public class DiffFileList {
     public String getInfo() {
       return info;
     }
+
+    public String getTime() {
+      return time;
+    }
   }
 
   public static void main(String[] args) throws IOException {
     File srcFile = new File(args[0]);
     File dstFile = new File(args[1]);
+
+    boolean ignoreTime = false;
+    if (args.length == 3) {
+      ignoreTime = Boolean.parseBoolean(args[2]);
+    }
 
     Map<String, FileInfo> srcMap = new HashMap<>();
     BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(srcFile)));
@@ -50,9 +61,9 @@ public class DiffFileList {
         if (!path.contains("/.Trash/") &&
             !path.contains("/_temporary/") &&
             !path.contains("/_distcp_logs_")) {
-          String info = String.format("%s %s %s %s %s %s %s",
-              arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
-          FileInfo fileInfo = new FileInfo(info);
+          String info = String.format("%s %s %s %s %s", arr[0], arr[1], arr[2], arr[3], arr[4]);
+          String time = String.format("%s %s", arr[5], arr[6]);
+          FileInfo fileInfo = new FileInfo(info, time);
           srcMap.put(path, fileInfo);
         }
       }
@@ -79,12 +90,15 @@ public class DiffFileList {
         if (!path.contains("/.Trash/") &&
             !path.contains("/_temporary/") &&
             !path.contains("/_distcp_logs_")) {
-          String info = String.format("%s %s %s %s %s %s %s",
-              arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6]);
+          String info = String.format("%s %s %s %s %s", arr[0], arr[1], arr[2], arr[3], arr[4]);
+          String time = String.format("%s %s", arr[5], arr[6]);
           if (srcMap.containsKey(path)) {
             // exists
             srcMap.get(path).setExist(true);
-            if (!srcMap.get(path).getInfo().equals(info)) {
+            String srcValue = ignoreTime ? srcMap.get(path).getInfo() :
+                String.format("%s %s", srcMap.get(path).getInfo(), srcMap.get(path).getTime());
+            String dstValue = ignoreTime ? info : String.format("%s %s", info, time);
+            if (!srcValue.equals(dstValue)) {
               // update
               System.out.println("UPDATE " + line);
             }
@@ -102,7 +116,8 @@ public class DiffFileList {
 
     for (Map.Entry<String, FileInfo> entry : srcMap.entrySet()) {
       if (!entry.getValue().isExist()) {
-        System.out.println("DELETE " + entry.getValue().getInfo() + " " + entry.getKey());
+        System.out.println(String.format("DELETE %s %s %s",
+            entry.getValue().getInfo(), entry.getValue().getTime(), entry.getKey()));
       }
     }
   }

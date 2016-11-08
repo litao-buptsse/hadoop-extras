@@ -12,5 +12,6 @@ public enum FastCopyCounter {
   UPDATE,
   MKDIR,
   FASTCOPY,
+  DISTCP,
   REDUCE
 }

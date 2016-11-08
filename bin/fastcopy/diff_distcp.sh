@@ -10,7 +10,7 @@ dstNamenode=$2
 srcDir=$3
 dstDir=/
 mapTaskNum=50
-ignoreTime=false
+ignoreTime=true
 
 time=`date +%Y%m%d%H%M%S`
 dirName=`echo $srcDir | sed 's/\///g'`
@@ -24,10 +24,10 @@ shuf diff.$time/raw/${dirName}.diff.tmp > diff.$time/raw/${dirName}.diff
 mkdir -p diff.$time/split
 ./split.sh diff.$time/raw/${dirName}.diff diff.$time/split/$dirName $dirName $mapTaskNum
 
-hdfsRoot=/tmp/fastcp/diff.$time
+hdfsRoot=/tmp/distcp/diff.$time
 hadoop fs -mkdir -p $hdfsRoot/copylist
 hadoop fs -copyFromLocal diff.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
-hdfsResultDir=$hdfsRoot/fastcp.result/$dirName
-./fastcp.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir FASTCOPY
+hdfsResultDir=$hdfsRoot/distcp.result/$dirName
+./fastcp.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DISTCP

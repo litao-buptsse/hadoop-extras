@@ -3,6 +3,8 @@ package com.sogou.hadoop.extras.tools.hdfs.fastcp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FastCopy;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.permission.FsPermission;
@@ -34,6 +36,8 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
         return new ChecksumTask(context);
       case DistributedFastCopy.JOB_TYPE_DELETE:
         return new DeleteTask(context);
+      case DistributedFastCopy.JOB_TYPE_DISTCP:
+        return new DistcpTask(context);
       default:
         throw new IOException("no such jobType: " + jobType);
     }
@@ -345,6 +349,130 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     @Override
     public void kill() throws IOException {
 
+    }
+  }
+
+  class DistcpTask implements MapperTask {
+    private final static int BUFFER_SIZE = 256 * 1024;
+    private final byte[] BUFFER = new byte[BUFFER_SIZE];
+    private Context context;
+
+    public DistcpTask(Context context) {
+      this.context = context;
+    }
+
+    @Override
+    public void run(String srcNamenode, String dstNamenode, String dstPath,
+                    String opType, String permission, String owner, String group,
+                    String srcPath) throws IOException {
+      if (srcPath.contains("/.Trash/") ||
+          srcPath.contains("/_temporary/") ||
+          srcPath.contains("/_distcp_logs_")) {
+        log.info("skip dir: " + opType + ", " +
+            srcNamenode + ", " + dstNamenode + ", " + srcPath + ", " + dstPath);
+        return;
+      }
+
+      switch (opType) {
+        case OP_TYPE_ADD:
+          create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
+          context.getCounter(FastCopyCounter.ADD).increment(1);
+          break;
+        case OP_TYPE_DELETE:
+          delete(srcPath, dstNamenode, dstPath);
+          context.getCounter(FastCopyCounter.DELETE).increment(1);
+          break;
+        case OP_TYPE_UPDATE:
+          update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
+          context.getCounter(FastCopyCounter.UPDATE).increment(1);
+          break;
+        default:
+          throw new IOException("no such opType: " + opType);
+      }
+    }
+
+    @Override
+    public void kill() throws IOException {
+
+    }
+
+    private void create(String srcNamenode, String srcPath,
+                        String dstNamenode, String dstPath,
+                        String permission, String owner, String group) throws IOException {
+      boolean isFile = permission.startsWith("-");
+      PathData realSrcPath = new PathData(srcNamenode + srcPath,
+          context.getConfiguration());
+      PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath,
+          context.getConfiguration());
+
+      if (isFile) {
+        distcp(realSrcPath, realDstPath);
+        context.getCounter(FastCopyCounter.DISTCP).increment(1);
+        log.info("succeed distcp: " + realSrcPath.path.toString() + ", " +
+            realDstPath.path.toString());
+      } else {
+        // mkdir
+        if (!realDstPath.exists) {
+          realDstPath.fs.mkdirs(realDstPath.path);
+          log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
+              realDstPath.path.toString());
+        }
+        context.getCounter(FastCopyCounter.MKDIR).increment(1);
+      }
+
+      // chown
+      realDstPath.fs.setOwner(realDstPath.path, owner, group);
+      log.info("succeed chown: " + owner + ", " + group + ", " + realDstPath.path.toString());
+
+      // chmod
+      realDstPath.fs.setPermission(realDstPath.path, FsPermission.valueOf(permission));
+      log.info("succeed chmod: " + permission + ", " + realDstPath.path.toString());
+
+      // set times
+      realDstPath.fs.setTimes(realDstPath.path,
+          realSrcPath.stat.getModificationTime(), realSrcPath.stat.getAccessTime());
+      log.info("succeed set times: " + realDstPath.path.toString() + ", " +
+          realSrcPath.stat.getModificationTime() + ", " + realSrcPath.stat.getAccessTime());
+    }
+
+    private void distcp(PathData srcPath, PathData dstPath) throws IOException {
+      try (FSDataInputStream input = srcPath.fs.open(srcPath.path, BUFFER_SIZE);
+           FSDataOutputStream output = dstPath.fs.create(dstPath.path, true, BUFFER_SIZE,
+               srcPath.stat.getReplication(), srcPath.stat.getBlockSize())) {
+        int bytesRead = 0;
+        long totalBytesRead = 0;
+        long length = srcPath.stat.getLen();
+        while (bytesRead >= 0 && totalBytesRead < length) {
+          int toRead = (int) Math.min(BUFFER.length, length - bytesRead);
+          bytesRead = input.read(totalBytesRead, BUFFER, 0, toRead);
+          if (bytesRead < 0) {
+            break;
+          }
+          output.write(BUFFER, 0, bytesRead);
+          totalBytesRead += bytesRead;
+        }
+      }
+    }
+
+    private void delete(String srcPath,
+                        String dstNamenode, String dstPath) throws IOException {
+      PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath,
+          context.getConfiguration());
+      if (realDstPath.exists) {
+        realDstPath.fs.delete(realDstPath.path, true);
+        log.info("succeed delete: " + realDstPath.path.toString());
+      }
+    }
+
+    private void update(String srcNamenode, String srcPath,
+                        String dstNamenode, String dstPath,
+                        String permission, String owner, String group) throws IOException {
+      PathData realDstPath = new PathData(dstNamenode + dstPath + srcPath,
+          context.getConfiguration());
+      if (realDstPath.exists && realDstPath.stat.isFile()) {
+        delete(srcPath, dstNamenode, dstPath);
+      }
+      create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
     }
   }
 }
