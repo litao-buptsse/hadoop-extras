@@ -14,6 +14,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
@@ -361,7 +362,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     public DistcpTask(Context context) {
       this.context = context;
       maxBytesPerSec =
-          context.getConfiguration().getInt("distcp.map.bandwidth.mb", 100) * 1024 * 1024;
+          context.getConfiguration().getInt("distcp.map.bandwidth.mb", 0) * 1024 * 1024;
     }
 
     @Override
@@ -439,13 +440,14 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     }
 
     private void distcp(PathData srcPath, PathData dstPath) throws IOException {
-      try (ThrottledInputStream input =
-               new ThrottledInputStream(
-                   srcPath.fs.open(srcPath.path, BUFFER_SIZE),
-                   maxBytesPerSec);
-           FSDataOutputStream output = dstPath.fs.create(
-               dstPath.path, true, BUFFER_SIZE,
-               srcPath.stat.getReplication(), srcPath.stat.getBlockSize())) {
+      try (
+          InputStream rawInput = srcPath.fs.open(srcPath.path, BUFFER_SIZE);
+          FSDataOutputStream output = dstPath.fs.create(
+              dstPath.path, true, BUFFER_SIZE,
+              srcPath.stat.getReplication(), srcPath.stat.getBlockSize())) {
+        ThrottledInputStream input = maxBytesPerSec == 0 ?
+            new ThrottledInputStream(rawInput) :
+            new ThrottledInputStream(rawInput, maxBytesPerSec);
         int bytesRead = 0;
         long totalBytesRead = 0;
         long length = srcPath.stat.getLen();
