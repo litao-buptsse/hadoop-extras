@@ -26,9 +26,9 @@ public class DistributedFastCopy implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     if (args.length < 5) {
-      log.error("usage: hadoop jar hadoop-extras.jar " +
-          "com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy " +
-          "<copyListDir> <srcNamenode> <dstNamenode> <dstDir> <resultDir> [FASTCOPY|CHECKSUM]");
+      log.error("need args: " +
+          "<copyListDir> <srcNamenode> <dstNamenode> <dstDir> <resultDir> " +
+          "[FASTCOPY|CHECKSUM|DELETE|DISTCP]");
       return 1;
     }
 

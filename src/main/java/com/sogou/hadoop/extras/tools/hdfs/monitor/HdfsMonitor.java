@@ -1,6 +1,6 @@
 package com.sogou.hadoop.extras.tools.hdfs.monitor;
 
-import com.sogou.hadoop.extras.common.CommonUtils;
+import com.sogou.hadoop.extras.tools.hdfs.util.CommonUtils;
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.BatchPoints;

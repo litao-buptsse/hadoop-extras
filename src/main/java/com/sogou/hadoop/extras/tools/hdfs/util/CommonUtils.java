@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.common;
+package com.sogou.hadoop.extras.tools.hdfs.util;
 
 import org.json.JSONObject;
 

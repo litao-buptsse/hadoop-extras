@@ -1,5 +1,6 @@
 package com.sogou.hadoop.extras.tools.hdfs.fastcp;
 
+import com.sogou.hadoop.extras.tools.hdfs.util.ThrottledInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -8,7 +9,6 @@ import org.apache.hadoop.fs.FastCopy;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.shell.PathData;
-import org.apache.hadoop.hbase.io.hadoopbackport.ThrottledInputStream;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
