@@ -3,12 +3,12 @@ package com.sogou.hadoop.extras.tools.hdfs.fastcp;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FastCopy;
 import org.apache.hadoop.fs.FileChecksum;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.fs.shell.PathData;
+import org.apache.hadoop.hbase.io.hadoopbackport.ThrottledInputStream;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
@@ -353,12 +353,15 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
   }
 
   class DistcpTask implements MapperTask {
+    private final Context context;
     private final static int BUFFER_SIZE = 256 * 1024;
-    private final byte[] BUFFER = new byte[BUFFER_SIZE];
-    private Context context;
+    private final byte[] buffer = new byte[BUFFER_SIZE];
+    private final long maxBytesPerSec;
 
     public DistcpTask(Context context) {
       this.context = context;
+      maxBytesPerSec =
+          context.getConfiguration().getInt("distcp.map.bandwidth.mb", 100) * 1024 * 1024;
     }
 
     @Override
@@ -436,19 +439,23 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
     }
 
     private void distcp(PathData srcPath, PathData dstPath) throws IOException {
-      try (FSDataInputStream input = srcPath.fs.open(srcPath.path, BUFFER_SIZE);
-           FSDataOutputStream output = dstPath.fs.create(dstPath.path, true, BUFFER_SIZE,
+      try (ThrottledInputStream input =
+               new ThrottledInputStream(
+                   srcPath.fs.open(srcPath.path, BUFFER_SIZE),
+                   maxBytesPerSec);
+           FSDataOutputStream output = dstPath.fs.create(
+               dstPath.path, true, BUFFER_SIZE,
                srcPath.stat.getReplication(), srcPath.stat.getBlockSize())) {
         int bytesRead = 0;
         long totalBytesRead = 0;
         long length = srcPath.stat.getLen();
         while (bytesRead >= 0 && totalBytesRead < length) {
-          int toRead = (int) Math.min(BUFFER.length, length - bytesRead);
-          bytesRead = input.read(totalBytesRead, BUFFER, 0, toRead);
+          int toRead = (int) Math.min(buffer.length, length - bytesRead);
+          bytesRead = input.read(totalBytesRead, buffer, 0, toRead);
           if (bytesRead < 0) {
             break;
           }
-          output.write(BUFFER, 0, bytesRead);
+          output.write(buffer, 0, bytesRead);
           totalBytesRead += bytesRead;
         }
       }
