@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir>"
+if [ $# -lt 3 ]; then
+  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir> [mapNum] [bandWidth]"
   exit 1
 fi
 
@@ -11,10 +11,16 @@ dstNamenode=$2
 srcDir=$3
 dstDir=/
 mapTaskNum=25
+bandWidth=100
+
+if [ $# -ge 4 ]; then mapTaskNum=$4; fi
+if [ $# -ge 5 ]; then bandWidth=$5; fi
 
 hdfsLogDir=/tmp/full_distcp_log_$time
 
 hadoop distcp \
-  -i -prbugp -m $mapTaskNum \
+  -i -prbugp \
   -log $hdfsLogDir \
+  -m $mapTaskNum \
+  -Ddistcp.map.bandwidth.mb=$bandWidth \
   $srcNamenode/$srcdir $dstNamenode/$dstDir

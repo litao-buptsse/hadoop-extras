@@ -8,11 +8,11 @@
 ## 全量拷贝
 
 ```
-./distcp_full <srcNN> <dstNN> <dir>
+./distcp_full <srcNN> <dstNN> <dir> [mapNum] [bandWidth]
 ```
 
 ## 增量拷贝
 
 ```
-./distcp_diff <srcNN> <dstNN> <dir>
+./distcp_diff <srcNN> <dstNN> <dir> [mapNum] [bandWidth]
 ```

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 6 ]; then
-  echo "usage: $0 <copyListDir> <srcNamenode> <dstNamenode> <dstDir> <resultDir> <jobType>"
+if [ $# -lt 6 ]; then
+  echo "usage: $0 <copyListDir> <srcNamenode> <dstNamenode> <dstDir> <resultDir> <jobType> [brandWith]"
   exit 1
 fi
 
@@ -11,6 +11,10 @@ dstNamenode=$3
 dstDir=$4
 resultDir=$5
 jobType=$6
+bandWidth=100
+
+# TODO ugly code, need to refactor
+if [ $# -ge 7 ]; then bandWidth=$7; fi
 
 hadoop jar \
   hadoop-extras-1.0-SNAPSHOT.jar \
@@ -24,4 +28,5 @@ hadoop jar \
   -Dmapreduce.job.queuename="root.leftover" \
   -Ddfs.fastcopy.max.datanode.errors=5000000 \
   -Ddfs.fastcopy.rpc.timeout=120000 \
+  -Ddistcp.map.bandwidth.mb=$bandWidth \
   $copyListDir $srcNamenode $dstNamenode $dstDir $resultDir $jobType

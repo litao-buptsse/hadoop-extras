@@ -1,7 +1,7 @@
 #!/bin/bash
 
-if [ $# -ne 3 ]; then
-  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir>"
+if [ $# -lt 3 ]; then
+  echo "usage: $0 <srcNamenode> <dstNamenode> <srcDir> [mapNum] [bandWidth]"
   exit 1
 fi
 
@@ -9,8 +9,12 @@ srcNamenode=$1
 dstNamenode=$2
 srcDir=$3
 dstDir=/
-mapTaskNum=50
+mapTaskNum=25
+bandWidth=100
 ignoreTime=true
+
+if [ $# -ge 4 ]; then mapTaskNum=$4; fi
+if [ $# -ge 5 ]; then bandWidth=$5; fi
 
 time=`date +%Y%m%d%H%M%S`
 dirName=`echo $srcDir | sed 's/\///g'`
@@ -30,4 +34,4 @@ hadoop fs -copyFromLocal diff.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/distcp.result/$dirName
-./dist_hdfs_op.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DISTCP
+./dist_hdfs_op.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DISTCP $bandWidth
