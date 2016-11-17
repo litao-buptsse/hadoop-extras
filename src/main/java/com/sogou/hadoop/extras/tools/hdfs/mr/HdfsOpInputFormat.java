@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class FastCopyInputFormat extends InputFormat {
-  private final Log log = LogFactory.getLog(FastCopyInputFormat.class);
+public class HdfsOpInputFormat extends InputFormat {
+  private final Log log = LogFactory.getLog(HdfsOpInputFormat.class);
 
   private final static String CONFIG_COPY_LIST_DIR = "copyListDir";
   private final static String CONFIG_SRC_NAMENODE = "srcNamenode";
@@ -54,10 +54,10 @@ public class FastCopyInputFormat extends InputFormat {
 
     List<InputSplit> splits = new ArrayList<>();
     for (PathData copyListFile : copyListDir.getDirectoryContents()) {
-      InputSplit split = new FastCopyInputSplit(copyListFile.path.toString(),
+      InputSplit split = new HdfsOpInputSplit(copyListFile.path.toString(),
           srcNamenode, dstNamenode, dstDir, jobType);
       splits.add(split);
-      log.info("add fastcp split: " + split.toString());
+      log.info("add split: " + split.toString());
     }
 
     return splits;

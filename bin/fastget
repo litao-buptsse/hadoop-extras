@@ -1,0 +1,23 @@
+#!/bin/bash
+
+if [ $# -le 2 ]; then
+  echo "usage: $0 <hdfsSrc> <localDst> [threadNum] [blockSize] [bandWidth]"
+  exit 1
+fi
+
+hdfsSrc=$1
+localDst=$2
+threadNum=3
+blockSize=128
+bandWidth=100
+
+if [ $# -ge 3 ]; then threadNum=$3; fi
+if [ $# -ge 4 ]; then blockSize=$4; fi
+if [ $# -ge 5 ]; then bandWidth=$5; fi
+
+hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
+  com.sogou.hadoop.extras.tools.hdfs.fastget.FastGet \
+  -Ddfs.fastget.threadnum=$threadNum \
+  -Ddfs.fastget.blocksize.mb=$blockSize \
+  -Ddfs.fastget.bandwidth.mb=$bandWidth \
+  $hdfsSrc $localDst

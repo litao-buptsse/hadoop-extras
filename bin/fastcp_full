@@ -27,4 +27,4 @@ hadoop fs -copyFromLocal full.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/fastcp.result/$dirName
-./fastcp.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir FASTCOPY
+./dist_hdfs_op.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir FASTCOPY

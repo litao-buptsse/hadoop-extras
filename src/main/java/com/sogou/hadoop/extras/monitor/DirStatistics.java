@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.monitor;
+package com.sogou.hadoop.extras.monitor;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.shell.PathData;

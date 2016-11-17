@@ -14,7 +14,7 @@ jobType=$6
 
 hadoop jar \
   hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.hdfs.fastcp.DistributedFastCopy \
+  com.sogou.hadoop.extras.tools.hdfs.mr.DistributedHdfsOp \
   -Dmapreduce.task.timeout=0 \
   -Dmapreduce.map.java.opts="-Xms5g -Xmx5g" \
   -Dmapreduce.map.memory.mb=6144 \

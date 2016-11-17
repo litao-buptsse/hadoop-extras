@@ -1,9 +1,9 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
 /**
  * Created by Tao Li on 08/10/2016.
  */
-public enum FastCopyCounter {
+public enum HdfsOpCounter {
   TOTAL,
   SUCC,
   FAIL,

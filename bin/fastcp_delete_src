@@ -27,4 +27,4 @@ hadoop fs -copyFromLocal delete.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/fastcp.result/$dirName
-./fastcp.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DELETE
+./dist_hdfs_op.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DELETE

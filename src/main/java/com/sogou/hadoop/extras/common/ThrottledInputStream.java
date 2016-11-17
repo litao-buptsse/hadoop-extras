@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package com.sogou.hadoop.extras.tools.hdfs.util;
+package com.sogou.hadoop.extras.common;
 
 import org.apache.hadoop.fs.PositionedReadable;
 

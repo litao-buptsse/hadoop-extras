@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,8 +13,8 @@ import org.apache.hadoop.util.ToolRunner;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class DistributedFastCopy implements Tool {
-  private final static Log log = LogFactory.getLog(DistributedFastCopy.class);
+public class DistributedHdfsOp implements Tool {
+  private final static Log log = LogFactory.getLog(DistributedHdfsOp.class);
 
   public final static String JOB_TYPE_FASTCOPY = "FASTCOPY";
   public final static String JOB_TYPE_CHECKSUM = "CHECKSUM";
@@ -49,18 +49,18 @@ public class DistributedFastCopy implements Tool {
 
     Job job = new Job(getConf());
 
-    job.setJobName("DistributedFastCopy-" + jobType + ":" + copyListDir);
-    job.setJarByClass(DistributedFastCopy.class);
+    job.setJobName("DistributedHdfsOp-" + jobType + ":" + copyListDir);
+    job.setJarByClass(DistributedHdfsOp.class);
 
-    job.setMapperClass(FastCopyMapper.class);
-    job.setReducerClass(FastCopyReducer.class);
+    job.setMapperClass(HdfsOpMapper.class);
+    job.setReducerClass(HdfsOpReducer.class);
 
-    job.setInputFormatClass(FastCopyInputFormat.class);
-    FastCopyInputFormat.setCopyListDir(job, copyListDir);
-    FastCopyInputFormat.setSrcNamenode(job, srcNamenode);
-    FastCopyInputFormat.setDstNamenode(job, dstNamenode);
-    FastCopyInputFormat.setDstDir(job, dstDir);
-    FastCopyInputFormat.setJobType(job, jobType);
+    job.setInputFormatClass(HdfsOpInputFormat.class);
+    HdfsOpInputFormat.setCopyListDir(job, copyListDir);
+    HdfsOpInputFormat.setSrcNamenode(job, srcNamenode);
+    HdfsOpInputFormat.setDstNamenode(job, dstNamenode);
+    HdfsOpInputFormat.setDstDir(job, dstDir);
+    HdfsOpInputFormat.setJobType(job, jobType);
 
     job.setOutputFormatClass(TextOutputFormat.class);
     TextOutputFormat.setOutputPath(job, new Path(resultDir));
@@ -84,6 +84,6 @@ public class DistributedFastCopy implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DistributedFastCopy(), args);
+    ToolRunner.run(new DistributedHdfsOp(), args);
   }
 }

@@ -1,6 +1,6 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
-import com.sogou.hadoop.extras.tools.hdfs.util.ThrottledInputStream;
+import com.sogou.hadoop.extras.common.ThrottledInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -22,8 +22,8 @@ import java.util.List;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
-  private final Log log = LogFactory.getLog(FastCopyMapper.class);
+public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
+  private final Log log = LogFactory.getLog(HdfsOpMapper.class);
 
   private final static String OP_TYPE_ADD = "ADD";
   private final static String OP_TYPE_DELETE = "DELETE";
@@ -31,13 +31,13 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
   private MapperTask createMapperTask(Context context, String jobType) throws IOException {
     switch (jobType) {
-      case DistributedFastCopy.JOB_TYPE_FASTCOPY:
+      case DistributedHdfsOp.JOB_TYPE_FASTCOPY:
         return new FastCopyTask(context);
-      case DistributedFastCopy.JOB_TYPE_CHECKSUM:
+      case DistributedHdfsOp.JOB_TYPE_CHECKSUM:
         return new ChecksumTask(context);
-      case DistributedFastCopy.JOB_TYPE_DELETE:
+      case DistributedHdfsOp.JOB_TYPE_DELETE:
         return new DeleteTask(context);
-      case DistributedFastCopy.JOB_TYPE_DISTCP:
+      case DistributedHdfsOp.JOB_TYPE_DISTCP:
         return new DistcpTask(context);
       default:
         throw new IOException("no such jobType: " + jobType);
@@ -46,7 +46,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
   @Override
   public void run(Context context) throws IOException, InterruptedException {
-    FastCopyInputSplit split = (FastCopyInputSplit) context.getInputSplit();
+    HdfsOpInputSplit split = (HdfsOpInputSplit) context.getInputSplit();
     PathData copyListPath = new PathData(split.getCopyListPath(), context.getConfiguration());
     String srcNamenode = split.getSrcNamenode();
     String dstNamenode = split.getDstNamenode();
@@ -60,7 +60,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
       String line = reader.readLine();
       while (line != null) {
-        context.getCounter(FastCopyCounter.TOTAL).increment(1);
+        context.getCounter(HdfsOpCounter.TOTAL).increment(1);
 
         String[] arr = line.split("\\s+");
         String permission = null;
@@ -88,11 +88,11 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
           try {
             task.run(srcNamenode, dstNamenode, dstPath,
                 opType, permission, owner, group, srcPath);
-            context.getCounter(FastCopyCounter.SUCC).increment(1);
+            context.getCounter(HdfsOpCounter.SUCC).increment(1);
           } catch (Exception e) {
             log.error("fail to run task: " + split.toString() + ", " + line, e);
             context.write(new Text(split.toString()), new Text(line));
-            context.getCounter(FastCopyCounter.FAIL).increment(1);
+            context.getCounter(HdfsOpCounter.FAIL).increment(1);
           }
         }
 
@@ -150,16 +150,16 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
-          context.getCounter(FastCopyCounter.ADD).increment(1);
+          context.getCounter(HdfsOpCounter.ADD).increment(1);
           break;
         case OP_TYPE_DELETE:
           delete(srcPath, dstNamenode, dstPath);
-          context.getCounter(FastCopyCounter.DELETE).increment(1);
+          context.getCounter(HdfsOpCounter.DELETE).increment(1);
           break;
         case OP_TYPE_UPDATE:
           update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
-          context.getCounter(FastCopyCounter.UPDATE).increment(1);
+          context.getCounter(HdfsOpCounter.UPDATE).increment(1);
           break;
         default:
           throw new IOException("no such opType: " + opType);
@@ -191,7 +191,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
             realSrcPath.fs, realDstPath.fs));
         try {
           fastCopy.copy(requests);
-          context.getCounter(FastCopyCounter.FASTCOPY).increment(1);
+          context.getCounter(HdfsOpCounter.FASTCOPY).increment(1);
           log.info("succeed fastcp: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         } catch (Exception e) {
@@ -204,7 +204,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
           log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         }
-        context.getCounter(FastCopyCounter.MKDIR).increment(1);
+        context.getCounter(HdfsOpCounter.MKDIR).increment(1);
       }
 
       // chown
@@ -341,7 +341,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
       if (realSrcPath.exists) {
         if (realSrcPath.stat.isFile() || realSrcPath.stat.isDirectory() && isRecursive) {
           realSrcPath.fs.delete(realSrcPath.path, true);
-          context.getCounter(FastCopyCounter.DELETE).increment(1);
+          context.getCounter(HdfsOpCounter.DELETE).increment(1);
           log.info("succeed delete: " + realSrcPath.path.toString());
         }
       }
@@ -380,15 +380,15 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
       switch (opType) {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
-          context.getCounter(FastCopyCounter.ADD).increment(1);
+          context.getCounter(HdfsOpCounter.ADD).increment(1);
           break;
         case OP_TYPE_DELETE:
           delete(srcPath, dstNamenode, dstPath);
-          context.getCounter(FastCopyCounter.DELETE).increment(1);
+          context.getCounter(HdfsOpCounter.DELETE).increment(1);
           break;
         case OP_TYPE_UPDATE:
           update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
-          context.getCounter(FastCopyCounter.UPDATE).increment(1);
+          context.getCounter(HdfsOpCounter.UPDATE).increment(1);
           break;
         default:
           throw new IOException("no such opType: " + opType);
@@ -411,7 +411,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
 
       if (isFile) {
         distcp(realSrcPath, realDstPath);
-        context.getCounter(FastCopyCounter.DISTCP).increment(1);
+        context.getCounter(HdfsOpCounter.DISTCP).increment(1);
         log.info("succeed distcp: " + realSrcPath.path.toString() + ", " +
             realDstPath.path.toString());
       } else {
@@ -421,7 +421,7 @@ public class FastCopyMapper extends Mapper<Text, Text, Text, Text> {
           log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         }
-        context.getCounter(FastCopyCounter.MKDIR).increment(1);
+        context.getCounter(HdfsOpCounter.MKDIR).increment(1);
       }
 
       // chown

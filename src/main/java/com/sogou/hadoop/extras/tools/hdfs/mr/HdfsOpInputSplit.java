@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,8 +13,8 @@ import java.io.IOException;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class FastCopyInputSplit extends InputSplit implements Writable {
-  private final Log log = LogFactory.getLog(FastCopyInputSplit.class);
+public class HdfsOpInputSplit extends InputSplit implements Writable {
+  private final Log log = LogFactory.getLog(HdfsOpInputSplit.class);
 
   private String copyListPath;
   private String srcNamenode;
@@ -24,11 +24,11 @@ public class FastCopyInputSplit extends InputSplit implements Writable {
 
   public static String FIELD_SEPERATOR = "\001";
 
-  public FastCopyInputSplit() {
+  public HdfsOpInputSplit() {
   }
 
-  public FastCopyInputSplit(String copyListPath, String srcNamenode, String dstNamenode,
-                            String dstPath, String jobType) {
+  public HdfsOpInputSplit(String copyListPath, String srcNamenode, String dstNamenode,
+                          String dstPath, String jobType) {
     this.copyListPath = copyListPath;
     this.srcNamenode = srcNamenode;
     this.dstNamenode = dstNamenode;
@@ -58,7 +58,7 @@ public class FastCopyInputSplit extends InputSplit implements Writable {
 
   @Override
   public String toString() {
-    return "FastCopyInputSplit{" +
+    return "HdfsOpInputSplit{" +
         "dstPath='" + dstPath + '\'' +
         ", jobType='" + jobType + '\'' +
         ", dstNamenode='" + dstNamenode + '\'' +

@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.fastcp;
+package com.sogou.hadoop.extras.tools.hdfs.mr;
 
 import java.io.*;
 import java.util.HashMap;
