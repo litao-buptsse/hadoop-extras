@@ -16,4 +16,3 @@
 ```
 ./distcp_diff <srcNN> <dstNN> <dir>
 ```
-```
