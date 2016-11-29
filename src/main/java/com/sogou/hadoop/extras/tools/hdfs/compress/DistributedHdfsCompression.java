@@ -39,7 +39,7 @@ public class DistributedHdfsCompression implements Tool {
     conf.set("mapreduce.output.fileoutputformat.compress.codec", "com.hadoop.compression.lzo.LzopCodec");
     conf.set("io.compression.codec.lzo.compressor", lzoCompressor);
 
-    Job job = new Job(conf, "DistributedHdfsCompression-" + inputPath);
+    Job job = Job.getInstance(conf, "DistributedHdfsCompression-" + inputPath);
 
     job.setJarByClass(DistributedHdfsCompression.class);
     job.setMapperClass(HdfsCompressionMapper.class);
