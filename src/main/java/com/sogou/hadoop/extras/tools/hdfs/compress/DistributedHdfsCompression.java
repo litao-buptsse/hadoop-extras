@@ -1,16 +1,14 @@
 package com.sogou.hadoop.extras.tools.hdfs.compress;
 
 import com.hadoop.compression.lzo.LzoIndexer;
-import com.hadoop.compression.lzo.LzopCodec;
-import com.sogou.hadoop.extras.mapreduce.lib.input.CombineMultiTextInputFormat;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.lib.CombineFileInputFormat;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.CombineTextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -46,13 +44,13 @@ public class DistributedHdfsCompression implements Tool {
     job.setJarByClass(DistributedHdfsCompression.class);
     job.setMapperClass(HdfsCompressionMapper.class);
     job.setNumReduceTasks(0);
-    job.setInputFormatClass(CombineMultiTextInputFormat.class);
+    job.setInputFormatClass(CombineTextInputFormat.class);
     job.setOutputKeyClass(NullWritable.class);
     job.setOutputValueClass(Text.class);
 
-    CombineFileInputFormat.setInputPaths(job, inputPath);
-    CombineFileInputFormat.setInputDirRecursive(job, true);
-    CombineFileInputFormat.setMaxInputSplitSize(job, Long.MAX_VALUE);
+    CombineTextInputFormat.setInputPaths(job, inputPath);
+    CombineTextInputFormat.setInputDirRecursive(job, true);
+    CombineTextInputFormat.setMaxInputSplitSize(job, Long.MAX_VALUE);
     FileOutputFormat.setOutputPath(job, outputPath);
 
     int ret = job.waitForCompletion(true) ? 0 : 1;
