@@ -62,7 +62,6 @@ public class DistributedHdfsCompression implements Tool {
     conf.set("io.compression.codec.lzo.compressor", lzoCompressAlgorithm);
 
     // for bzip2
-    conf.set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.BZip2Codec");
     conf.set("io.compression.codec.bzip2.library", "system-native");
 
     Job job = Job.getInstance(conf, "DistributedHdfsCompression-" + inputPath);
