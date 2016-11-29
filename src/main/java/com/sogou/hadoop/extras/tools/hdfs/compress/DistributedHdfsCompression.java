@@ -24,20 +24,46 @@ public class DistributedHdfsCompression implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
-      log.error("args: <inputPath> <outputPath> [lzoCompressAlgorithm] [lzoIndex]");
+      log.error("args: <inputPath> <outputPath> " +
+          "[-Dcodec=<LZO|BZIP2> -DmaxInputSplitSize=<maxInputSplitSize> " +
+          "-DlzoCompressAlgorithm=<LZO1X_1|LZO1X_999> -DgenerateLzoIndex=<true|false>]");
       return 1;
     }
 
     Path inputPath = new Path(args[0]);
     Path outputPath = new Path(args[1]);
-    String lzoCompressor = args.length >= 3 ? args[2] : "LZO1X_1";
-    boolean generateIndex = args.length >= 4 ? Boolean.parseBoolean(args[3]) : false;
+    String codec = conf.get("codec", "LZO").toUpperCase();
+
+    String codecClass;
+    switch (codec) {
+      case "LZO":
+        codecClass = "com.hadoop.compression.lzo.LzopCodec";
+        break;
+      case "BZIP2":
+        codecClass = "org.apache.hadoop.io.compress.BZip2Codec";
+        break;
+      default:
+        log.error("not support codec: " + codec);
+        return 1;
+    }
+
+    long maxInputSplitSize = conf.getLong("maxInputSplitSize", Long.MAX_VALUE);
+
+    // for lzo
+    String lzoCompressAlgorithm = conf.get("lzoCompressAlgorithm", "LZO1X_1");
+    boolean generateLzoIndex = conf.getBoolean("generateLzoIndex", false);
 
     conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
     conf.set("mapreduce.output.fileoutputformat.compress", "true");
     conf.set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
-    conf.set("mapreduce.output.fileoutputformat.compress.codec", "com.hadoop.compression.lzo.LzopCodec");
-    conf.set("io.compression.codec.lzo.compressor", lzoCompressor);
+    conf.set("mapreduce.output.fileoutputformat.compress.codec", codecClass);
+
+    // for lzo
+    conf.set("io.compression.codec.lzo.compressor", lzoCompressAlgorithm);
+
+    // for bzip2
+    conf.set("mapreduce.output.fileoutputformat.compress.codec", "org.apache.hadoop.io.compress.BZip2Codec");
+    conf.set("io.compression.codec.bzip2.library", "system-native");
 
     Job job = Job.getInstance(conf, "DistributedHdfsCompression-" + inputPath);
 
@@ -50,15 +76,17 @@ public class DistributedHdfsCompression implements Tool {
 
     CombineTextInputFormat.setInputPaths(job, inputPath);
     CombineTextInputFormat.setInputDirRecursive(job, true);
-    CombineTextInputFormat.setMaxInputSplitSize(job, Long.MAX_VALUE);
+    CombineTextInputFormat.setMaxInputSplitSize(job, maxInputSplitSize);
     FileOutputFormat.setOutputPath(job, outputPath);
 
     int ret = job.waitForCompletion(true) ? 0 : 1;
-    Path outputLzoPath = new Path(outputPath, "part-m-00000.lzo");
-    if (generateIndex && ret == 0 && outputLzoPath.getFileSystem(conf).exists(outputLzoPath)) {
+    // Path outputLzoPath = new Path(outputPath, "part-m-00000.lzo");
+
+    // for lzo
+    if (codec.equals("LZO") && generateLzoIndex && ret == 0) {
+      log.info("Indexing lzo file " + outputPath);
       LzoIndexer lzoIndexer = new LzoIndexer(conf);
-      log.info("Indexing lzo file " + outputLzoPath);
-      lzoIndexer.index(outputLzoPath);
+      lzoIndexer.index(outputPath);
     }
 
     return ret;
