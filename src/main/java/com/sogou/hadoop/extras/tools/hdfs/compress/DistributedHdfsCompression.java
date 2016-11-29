@@ -24,7 +24,7 @@ public class DistributedHdfsCompression implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
-      log.error("args: <inputPath> <dstPath> [lzoCompressAlgorithm] [lzoIndex]");
+      log.error("args: <inputPath> <outputPath> [lzoCompressAlgorithm] [lzoIndex]");
       return 1;
     }
 
