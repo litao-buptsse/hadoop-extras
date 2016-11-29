@@ -24,9 +24,9 @@ public class DistributedHdfsCompression implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
-      log.error("args: <inputPath> <outputPath> " +
-          "[-Dcodec=<LZO|BZIP2> -DmaxInputSplitSize=<maxInputSplitSize> " +
-          "-DlzoCompressAlgorithm=<LZO1X_1|LZO1X_999> -DgenerateLzoIndex=<true|false>]");
+      log.error("args: <inputPath> <outputPath>\n" +
+          "options: -Dcodec=<LZO|BZIP2> -DmaxInputSplitSize=<maxInputSplitSize> " +
+          "-DlzoCompressAlgorithm=<LZO1X_1|LZO1X_999> -DgenerateLzoIndex=<true|false>");
       return 1;
     }
 
@@ -79,7 +79,6 @@ public class DistributedHdfsCompression implements Tool {
     FileOutputFormat.setOutputPath(job, outputPath);
 
     int ret = job.waitForCompletion(true) ? 0 : 1;
-    // Path outputLzoPath = new Path(outputPath, "part-m-00000.lzo");
 
     // for lzo
     if (codec.equals("LZO") && generateLzoIndex && ret == 0) {
