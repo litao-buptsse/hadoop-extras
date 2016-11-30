@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.monitor;
+package com.sogou.hadoop.extras.tools.hdfs.monitor;
 
 import com.sogou.hadoop.extras.common.CommonUtils;
 import org.influxdb.InfluxDB;
