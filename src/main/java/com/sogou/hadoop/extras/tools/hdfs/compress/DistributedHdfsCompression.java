@@ -24,41 +24,42 @@ public class DistributedHdfsCompression implements Tool {
   @Override
   public int run(String[] args) throws Exception {
     if (args.length < 2) {
-      log.error("args: <inputPath> <outputPath> [LZO|LZO9|BZIP2]");
+      log.error("args: <inputPath> <outputPath> [HOT|WARM|COLD]\n" +
+          "options: -DmaxInputSplitSize=<maxInputSplitSize> -DgenerateLzoIndex=[true|false]");
       return 1;
     }
 
     Path inputPath = new Path(args[0]);
     Path outputPath = new Path(args[1]);
-    String codec = args.length >= 3 ? args[2].toUpperCase() : "LZO";
+    String compressType = args.length >= 3 ? args[2].toUpperCase() : "HOT";
 
     conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
     conf.set("mapreduce.output.fileoutputformat.compress", "true");
     conf.set("mapreduce.output.fileoutputformat.compress.type", "BLOCK");
 
-    switch (codec) {
-      case "LZO":
+    switch (compressType) {
+      case "HOT":
         conf.set("mapreduce.output.fileoutputformat.compress.codec",
             "com.hadoop.compression.lzo.LzopCodec");
         conf.set("io.compression.codec.lzo.compressor", "LZO1X_1");
         break;
-      case "LZO9":
+      case "WARM":
         conf.set("mapreduce.output.fileoutputformat.compress.codec",
             "com.hadoop.compression.lzo.LzopCodec");
         conf.set("io.compression.codec.lzo.compressor", "LZO1X_999");
         break;
-      case "BZIP2":
+      case "COLD":
         conf.set("mapreduce.output.fileoutputformat.compress.codec",
             "org.apache.hadoop.io.compress.BZip2Codec");
         conf.set("io.compression.codec.bzip2.library", "system-native");
         break;
       default:
-        log.error("not support codec: " + codec);
+        log.error("not support compress type: " + compressType);
         return 1;
     }
 
     Job job = Job.getInstance(conf,
-        String.format("DistributedHdfsCompression-%s-%s", codec, inputPath));
+        String.format("DistributedHdfsCompression-%s-%s", compressType, inputPath));
 
     job.setJarByClass(DistributedHdfsCompression.class);
     job.setMapperClass(HdfsCompressionMapper.class);
@@ -76,7 +77,7 @@ public class DistributedHdfsCompression implements Tool {
     int ret = job.waitForCompletion(true) ? 0 : 1;
 
     // only for lzo index
-    if (ret == 0 && (codec.equals("LZO") || codec.equals("LZO9")) &&
+    if (ret == 0 && (compressType.equals("HOT") || compressType.equals("WARM")) &&
         conf.getBoolean("generateLzoIndex", false)) {
       log.info("Indexing lzo file " + outputPath);
       LzoIndexer lzoIndexer = new LzoIndexer(conf);

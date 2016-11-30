@@ -1,0 +1,16 @@
+#!/bin/bash
+
+if [ $# -le 2 ]; then
+  echo "usage: $0 <inputPath> <outputPath> [HOT|WARM|COLD]"
+  exit 1
+fi
+
+inputPath=$1
+outputPath=$2
+compressType=HOT
+
+if [ $# -ge 3 ]; then codec=$3; fi
+
+hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
+  com.sogou.hadoop.extras.tools.hdfs.compress.DistributedHdfsCompression \
+  $inputPath $outputPath $compressType
