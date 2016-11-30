@@ -14,7 +14,7 @@ public class LineCounterReducer extends Reducer<NullWritable, LongWritable, Null
   protected void reduce(NullWritable key, Iterable<LongWritable> values,
                         Context context) throws IOException, InterruptedException {
     long sum = 0;
-    for(LongWritable value : values) {
+    for (LongWritable value : values) {
       sum += value.get();
     }
     context.write(NullWritable.get(), new LongWritable(sum));

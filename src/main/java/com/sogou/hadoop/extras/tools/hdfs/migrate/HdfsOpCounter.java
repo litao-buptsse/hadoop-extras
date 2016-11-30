@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.mr;
+package com.sogou.hadoop.extras.tools.hdfs.migrate;
 
 /**
  * Created by Tao Li on 08/10/2016.

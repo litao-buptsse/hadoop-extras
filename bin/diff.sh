@@ -17,5 +17,5 @@ fi
 export HADOOP_CLIENT_OPTS="-Xmx50g -Xms50g"
 
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.hdfs.mr.DiffFileList \
+  com.sogou.hadoop.extras.tools.hdfs.migrate.DiffFileList \
   $copylist $copylist_new $ignore_time > $copylist_diff

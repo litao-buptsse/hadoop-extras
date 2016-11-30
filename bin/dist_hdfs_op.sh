@@ -18,7 +18,7 @@ if [ $# -ge 7 ]; then bandWidth=$7; fi
 
 hadoop jar \
   hadoop-extras-1.0-SNAPSHOT.jar \
-  com.sogou.hadoop.extras.tools.hdfs.mr.DistributedHdfsOp \
+  com.sogou.hadoop.extras.tools.hdfs.migrate.DistributedHdfsOp \
   -Dmapreduce.task.timeout=0 \
   -Dmapreduce.map.java.opts="-Xms5g -Xmx5g" \
   -Dmapreduce.map.memory.mb=6144 \

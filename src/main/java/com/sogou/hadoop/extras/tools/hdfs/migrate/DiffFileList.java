@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.mr;
+package com.sogou.hadoop.extras.tools.hdfs.migrate;
 
 import java.io.*;
 import java.util.HashMap;

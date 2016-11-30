@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.mr;
+package com.sogou.hadoop.extras.tools.hdfs.migrate;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
