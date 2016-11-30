@@ -34,4 +34,4 @@ hadoop fs -copyFromLocal diff.$time/split/$dirName $hdfsRoot/copylist
 
 hdfsCopyListDir=$hdfsRoot/copylist/$dirName
 hdfsResultDir=$hdfsRoot/distcp.result/$dirName
-./dist_hdfs_op.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DISTCP $bandWidth
+./dist_hdfs_migrate.sh $hdfsCopyListDir $srcNamenode $dstNamenode $dstDir $hdfsResultDir DISTCP $bandWidth

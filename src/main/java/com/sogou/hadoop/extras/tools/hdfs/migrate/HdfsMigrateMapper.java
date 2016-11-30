@@ -22,8 +22,8 @@ import java.util.List;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
-  private final Log log = LogFactory.getLog(HdfsOpMapper.class);
+public class HdfsMigrateMapper extends Mapper<Text, Text, Text, Text> {
+  private final Log log = LogFactory.getLog(HdfsMigrateMapper.class);
 
   private final static String OP_TYPE_ADD = "ADD";
   private final static String OP_TYPE_DELETE = "DELETE";
@@ -31,13 +31,13 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
 
   private MapperTask createMapperTask(Context context, String jobType) throws IOException {
     switch (jobType) {
-      case DistributedHdfsOp.JOB_TYPE_FASTCOPY:
+      case DistributedHdfsMigrate.JOB_TYPE_FASTCOPY:
         return new FastCopyTask(context);
-      case DistributedHdfsOp.JOB_TYPE_CHECKSUM:
+      case DistributedHdfsMigrate.JOB_TYPE_CHECKSUM:
         return new ChecksumTask(context);
-      case DistributedHdfsOp.JOB_TYPE_DELETE:
+      case DistributedHdfsMigrate.JOB_TYPE_DELETE:
         return new DeleteTask(context);
-      case DistributedHdfsOp.JOB_TYPE_DISTCP:
+      case DistributedHdfsMigrate.JOB_TYPE_DISTCP:
         return new DistcpTask(context);
       default:
         throw new IOException("no such jobType: " + jobType);
@@ -46,7 +46,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
 
   @Override
   public void run(Context context) throws IOException, InterruptedException {
-    HdfsOpInputSplit split = (HdfsOpInputSplit) context.getInputSplit();
+    HdfsMigrateInputSplit split = (HdfsMigrateInputSplit) context.getInputSplit();
     PathData copyListPath = new PathData(split.getCopyListPath(), context.getConfiguration());
     String srcNamenode = split.getSrcNamenode();
     String dstNamenode = split.getDstNamenode();
@@ -60,7 +60,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
 
       String line = reader.readLine();
       while (line != null) {
-        context.getCounter(HdfsOpCounter.TOTAL).increment(1);
+        context.getCounter(HdfsMigrateCounter.TOTAL).increment(1);
 
         String[] arr = line.split("\\s+");
         String permission = null;
@@ -88,11 +88,11 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
           try {
             task.run(srcNamenode, dstNamenode, dstPath,
                 opType, permission, owner, group, srcPath);
-            context.getCounter(HdfsOpCounter.SUCC).increment(1);
+            context.getCounter(HdfsMigrateCounter.SUCC).increment(1);
           } catch (Exception e) {
             log.error("fail to run task: " + split.toString() + ", " + line, e);
             context.write(new Text(split.toString()), new Text(line));
-            context.getCounter(HdfsOpCounter.FAIL).increment(1);
+            context.getCounter(HdfsMigrateCounter.FAIL).increment(1);
           }
         }
 
@@ -150,16 +150,16 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
-          context.getCounter(HdfsOpCounter.ADD).increment(1);
+          context.getCounter(HdfsMigrateCounter.ADD).increment(1);
           break;
         case OP_TYPE_DELETE:
           delete(srcPath, dstNamenode, dstPath);
-          context.getCounter(HdfsOpCounter.DELETE).increment(1);
+          context.getCounter(HdfsMigrateCounter.DELETE).increment(1);
           break;
         case OP_TYPE_UPDATE:
           update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group,
               fastCopy, requests);
-          context.getCounter(HdfsOpCounter.UPDATE).increment(1);
+          context.getCounter(HdfsMigrateCounter.UPDATE).increment(1);
           break;
         default:
           throw new IOException("no such opType: " + opType);
@@ -191,7 +191,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
             realSrcPath.fs, realDstPath.fs));
         try {
           fastCopy.copy(requests);
-          context.getCounter(HdfsOpCounter.FASTCOPY).increment(1);
+          context.getCounter(HdfsMigrateCounter.FASTCOPY).increment(1);
           log.info("succeed fastcp: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         } catch (Exception e) {
@@ -204,7 +204,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
           log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         }
-        context.getCounter(HdfsOpCounter.MKDIR).increment(1);
+        context.getCounter(HdfsMigrateCounter.MKDIR).increment(1);
       }
 
       // chown
@@ -341,7 +341,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
       if (realSrcPath.exists) {
         if (realSrcPath.stat.isFile() || realSrcPath.stat.isDirectory() && isRecursive) {
           realSrcPath.fs.delete(realSrcPath.path, true);
-          context.getCounter(HdfsOpCounter.DELETE).increment(1);
+          context.getCounter(HdfsMigrateCounter.DELETE).increment(1);
           log.info("succeed delete: " + realSrcPath.path.toString());
         }
       }
@@ -380,15 +380,15 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
       switch (opType) {
         case OP_TYPE_ADD:
           create(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
-          context.getCounter(HdfsOpCounter.ADD).increment(1);
+          context.getCounter(HdfsMigrateCounter.ADD).increment(1);
           break;
         case OP_TYPE_DELETE:
           delete(srcPath, dstNamenode, dstPath);
-          context.getCounter(HdfsOpCounter.DELETE).increment(1);
+          context.getCounter(HdfsMigrateCounter.DELETE).increment(1);
           break;
         case OP_TYPE_UPDATE:
           update(srcNamenode, srcPath, dstNamenode, dstPath, permission, owner, group);
-          context.getCounter(HdfsOpCounter.UPDATE).increment(1);
+          context.getCounter(HdfsMigrateCounter.UPDATE).increment(1);
           break;
         default:
           throw new IOException("no such opType: " + opType);
@@ -411,7 +411,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
 
       if (isFile) {
         distcp(realSrcPath, realDstPath);
-        context.getCounter(HdfsOpCounter.DISTCP).increment(1);
+        context.getCounter(HdfsMigrateCounter.DISTCP).increment(1);
         log.info("succeed distcp: " + realSrcPath.path.toString() + ", " +
             realDstPath.path.toString());
       } else {
@@ -421,7 +421,7 @@ public class HdfsOpMapper extends Mapper<Text, Text, Text, Text> {
           log.info("succeed mkdir: " + realSrcPath.path.toString() + ", " +
               realDstPath.path.toString());
         }
-        context.getCounter(HdfsOpCounter.MKDIR).increment(1);
+        context.getCounter(HdfsMigrateCounter.MKDIR).increment(1);
       }
 
       // chown

@@ -13,8 +13,8 @@ import java.util.List;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class HdfsOpInputFormat extends InputFormat {
-  private final Log log = LogFactory.getLog(HdfsOpInputFormat.class);
+public class HdfsMigrateInputFormat extends InputFormat {
+  private final Log log = LogFactory.getLog(HdfsMigrateInputFormat.class);
 
   private final static String CONFIG_COPY_LIST_DIR = "copyListDir";
   private final static String CONFIG_SRC_NAMENODE = "srcNamenode";
@@ -54,7 +54,7 @@ public class HdfsOpInputFormat extends InputFormat {
 
     List<InputSplit> splits = new ArrayList<>();
     for (PathData copyListFile : copyListDir.getDirectoryContents()) {
-      InputSplit split = new HdfsOpInputSplit(copyListFile.path.toString(),
+      InputSplit split = new HdfsMigrateInputSplit(copyListFile.path.toString(),
           srcNamenode, dstNamenode, dstDir, jobType);
       splits.add(split);
       log.info("add split: " + split.toString());

@@ -10,8 +10,8 @@ import java.io.IOException;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class HdfsOpReducer extends Reducer<Text, Text, Text, Text> {
-  private final Log log = LogFactory.getLog(HdfsOpReducer.class);
+public class HdfsMigrateReducer extends Reducer<Text, Text, Text, Text> {
+  private final Log log = LogFactory.getLog(HdfsMigrateReducer.class);
 
   @Override
   protected void reduce(Text key, Iterable<Text> values, Context context)
@@ -19,7 +19,7 @@ public class HdfsOpReducer extends Reducer<Text, Text, Text, Text> {
     for (Text value : values) {
       log.info("reduce output: " + key + ", " + value);
       context.write(key, value);
-      context.getCounter(HdfsOpCounter.REDUCE).increment(1);
+      context.getCounter(HdfsMigrateCounter.REDUCE).increment(1);
     }
   }
 }

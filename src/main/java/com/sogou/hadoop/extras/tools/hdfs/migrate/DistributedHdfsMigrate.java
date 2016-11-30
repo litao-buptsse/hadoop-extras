@@ -13,8 +13,8 @@ import org.apache.hadoop.util.ToolRunner;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class DistributedHdfsOp implements Tool {
-  private final static Log log = LogFactory.getLog(DistributedHdfsOp.class);
+public class DistributedHdfsMigrate implements Tool {
+  private final static Log log = LogFactory.getLog(DistributedHdfsMigrate.class);
 
   public final static String JOB_TYPE_FASTCOPY = "FASTCOPY";
   public final static String JOB_TYPE_CHECKSUM = "CHECKSUM";
@@ -49,18 +49,18 @@ public class DistributedHdfsOp implements Tool {
 
     Job job = new Job(getConf());
 
-    job.setJobName("DistributedHdfsOp-" + jobType + ":" + copyListDir);
-    job.setJarByClass(DistributedHdfsOp.class);
+    job.setJobName("DistributedHdfsMigrate-" + jobType + ":" + copyListDir);
+    job.setJarByClass(DistributedHdfsMigrate.class);
 
-    job.setMapperClass(HdfsOpMapper.class);
-    job.setReducerClass(HdfsOpReducer.class);
+    job.setMapperClass(HdfsMigrateMapper.class);
+    job.setReducerClass(HdfsMigrateReducer.class);
 
-    job.setInputFormatClass(HdfsOpInputFormat.class);
-    HdfsOpInputFormat.setCopyListDir(job, copyListDir);
-    HdfsOpInputFormat.setSrcNamenode(job, srcNamenode);
-    HdfsOpInputFormat.setDstNamenode(job, dstNamenode);
-    HdfsOpInputFormat.setDstDir(job, dstDir);
-    HdfsOpInputFormat.setJobType(job, jobType);
+    job.setInputFormatClass(HdfsMigrateInputFormat.class);
+    HdfsMigrateInputFormat.setCopyListDir(job, copyListDir);
+    HdfsMigrateInputFormat.setSrcNamenode(job, srcNamenode);
+    HdfsMigrateInputFormat.setDstNamenode(job, dstNamenode);
+    HdfsMigrateInputFormat.setDstDir(job, dstDir);
+    HdfsMigrateInputFormat.setJobType(job, jobType);
 
     job.setOutputFormatClass(TextOutputFormat.class);
     TextOutputFormat.setOutputPath(job, new Path(resultDir));
@@ -84,6 +84,6 @@ public class DistributedHdfsOp implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DistributedHdfsOp(), args);
+    ToolRunner.run(new DistributedHdfsMigrate(), args);
   }
 }

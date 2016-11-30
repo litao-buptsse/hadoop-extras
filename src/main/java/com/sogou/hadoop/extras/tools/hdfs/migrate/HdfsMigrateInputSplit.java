@@ -13,8 +13,8 @@ import java.io.IOException;
 /**
  * Created by Tao Li on 25/09/2016.
  */
-public class HdfsOpInputSplit extends InputSplit implements Writable {
-  private final Log log = LogFactory.getLog(HdfsOpInputSplit.class);
+public class HdfsMigrateInputSplit extends InputSplit implements Writable {
+  private final Log log = LogFactory.getLog(HdfsMigrateInputSplit.class);
 
   private String copyListPath;
   private String srcNamenode;
@@ -24,11 +24,11 @@ public class HdfsOpInputSplit extends InputSplit implements Writable {
 
   public static String FIELD_SEPERATOR = "\001";
 
-  public HdfsOpInputSplit() {
+  public HdfsMigrateInputSplit() {
   }
 
-  public HdfsOpInputSplit(String copyListPath, String srcNamenode, String dstNamenode,
-                          String dstPath, String jobType) {
+  public HdfsMigrateInputSplit(String copyListPath, String srcNamenode, String dstNamenode,
+                               String dstPath, String jobType) {
     this.copyListPath = copyListPath;
     this.srcNamenode = srcNamenode;
     this.dstNamenode = dstNamenode;
