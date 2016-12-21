@@ -8,5 +8,5 @@
 ## 使用方式
 
 ```
-./compress_hdfs <inputPath> <outputPath> [HOT|WARM|COLD]
+./compress_hdfs <inputPath> <filePattern> <HOT|WARM|COLD> [filePrefix] [outputPath] [tmpPath] [trashPath]
 ```

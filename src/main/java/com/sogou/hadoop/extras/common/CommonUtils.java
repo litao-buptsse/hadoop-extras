@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.math.BigDecimal;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * Created by Tao Li on 2016/8/24.
@@ -32,5 +34,13 @@ public class CommonUtils {
   public static double percentageStringToDouble(String percentage) {
     return new BigDecimal(percentage.trim().replace("%", ""))
         .divide(BigDecimal.valueOf(100)).doubleValue();
+  }
+
+  public static String now(String pattern) {
+    return new SimpleDateFormat(pattern).format(new Date(System.currentTimeMillis()));
+  }
+
+  public static void main(String[] args) {
+    System.out.println(now("yyyyMMdd"));
   }
 }

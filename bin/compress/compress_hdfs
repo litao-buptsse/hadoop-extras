@@ -1,16 +1,25 @@
 #!/bin/bash
 
-if [ $# -le 2 ]; then
-  echo "usage: $0 <inputPath> <outputPath> [HOT|WARM|COLD]"
+if [ $# -lt 3 ]; then
+  echo "usage: $0 <inputPath> <filePattern> <HOT|WARM|COLD> [filePrefix] [outputPath] [tmpPath] [trashPath]"
   exit 1
 fi
 
 inputPath=$1
-outputPath=$2
-compressType=HOT
+filePattern=$2
+compressType=$3
+filePrefix=''
+outputPath=$inputPath
+tmpPath='/logdata/tmp/hdfs_compress_tmp'
+trashPath='/logdata/tmp/hdfs_compress_trash'
+ymd=`date +%Y%m%d`
 
-if [ $# -ge 3 ]; then codec=$3; fi
+if [ $# -ge 4 ]; then filePrefix=$4; fi
+if [ $# -ge 5 ]; then outputPath=$5; fi
+if [ $# -ge 6 ]; then tmpPath=$6; fi
+if [ $# -ge 7 ]; then trashPath=$7; fi
 
 hadoop jar hadoop-extras-1.0-SNAPSHOT.jar \
   com.sogou.hadoop.extras.tools.hdfs.compress.DistributedHdfsCompression \
-  $inputPath $outputPath $compressType
+  -DfilePrefix=$filePrefix -DoutputPath=$outputPath -DtmpPath=$tmpPath -DtrashPath=$trashPath \
+  $inputPath $filePattern $compressType

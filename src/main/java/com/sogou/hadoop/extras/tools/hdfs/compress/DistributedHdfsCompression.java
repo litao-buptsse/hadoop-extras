@@ -1,9 +1,12 @@
 package com.sogou.hadoop.extras.tools.hdfs.compress;
 
 import com.hadoop.compression.lzo.LzoIndexer;
+import com.sogou.hadoop.extras.common.CommonUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -19,19 +22,39 @@ import org.apache.hadoop.util.ToolRunner;
 public class DistributedHdfsCompression implements Tool {
   private final static Log log = LogFactory.getLog(DistributedHdfsCompression.class);
 
+  private final static String DEFAULT_TMP_PATH = "/tmp/hdfs_compress_tmp";
+  private final static String DEFAULT_TRASH_PATH = "/tmp/hdfs_compress_trash";
+
   private Configuration conf;
 
   @Override
   public int run(String[] args) throws Exception {
-    if (args.length < 2) {
-      log.error("args: <inputPath> <outputPath> [HOT|WARM|COLD]\n" +
-          "options: -DmaxInputSplitSize=<maxInputSplitSize> -DgenerateLzoIndex=[true|false]");
+    if (args.length < 3) {
+      log.error("args: <inputPath> <filePattern> <HOT|WARM|COLD>\n" +
+          "options: -DmaxInputSplitSize=<maxInputSplitSize> -DgenerateLzoIndex=<true|false>" +
+          " -DfilePrefix=<prefix> -DoutputPath=<path> -DtmpPath=<path> -DtrashPath=<path>");
       return 1;
     }
 
-    Path inputPath = new Path(args[0]);
-    Path outputPath = new Path(args[1]);
-    String compressType = args.length >= 3 ? args[2].toUpperCase() : "HOT";
+    String ymd = CommonUtils.now("yyyyMMdd");
+    Path inputPath = new Path(args[0], args[1]);
+    Path tmpPath = new Path(String.format("%s/$s/%s",
+        conf.get("tmpPath", DEFAULT_TMP_PATH), ymd, System.nanoTime()));
+    Path outputPath = new Path(conf.get("outputPath", args[0]));
+    Path trashPath = new Path(String.format("%s/%s",
+        conf.get("trashPath", DEFAULT_TRASH_PATH), ymd));
+    String compressType = args[2].toUpperCase();
+    String filePrefix = conf.get("filePrefix", "");
+
+    if (tmpPath.getFileSystem(conf).exists(tmpPath)) {
+      log.error("tmpPath already exist");
+      return 1;
+    }
+
+    if (!outputPath.getFileSystem(conf).exists(outputPath)) {
+      log.error("outputPath not exist");
+      return 1;
+    }
 
     conf.set("mapreduce.fileoutputcommitter.marksuccessfuljobs", "false");
     conf.set("mapreduce.output.fileoutputformat.compress", "true");
@@ -72,16 +95,40 @@ public class DistributedHdfsCompression implements Tool {
     CombineTextInputFormat.setInputDirRecursive(job, true);
     CombineTextInputFormat.setMaxInputSplitSize(job,
         conf.getLong("maxInputSplitSize", Long.MAX_VALUE));
-    FileOutputFormat.setOutputPath(job, outputPath);
+    FileOutputFormat.setOutputPath(job, tmpPath);
 
     int ret = job.waitForCompletion(true) ? 0 : 1;
 
-    // only for lzo index
-    if (ret == 0 && (compressType.equals("HOT") || compressType.equals("WARM")) &&
-        conf.getBoolean("generateLzoIndex", false)) {
-      log.info("Indexing lzo file " + outputPath);
-      LzoIndexer lzoIndexer = new LzoIndexer(conf);
-      lzoIndexer.index(outputPath);
+    if (ret == 0) {
+      // only for lzo index
+      if ((compressType.equals("HOT") || compressType.equals("WARM")) &&
+          conf.getBoolean("generateLzoIndex", false)) {
+        log.info("Indexing lzo file " + tmpPath);
+        LzoIndexer lzoIndexer = new LzoIndexer(conf);
+        lzoIndexer.index(tmpPath);
+      }
+
+      // move file from input dir to trash dir
+      FileSystem inputFS = inputPath.getFileSystem(conf);
+      FileSystem trashFS = trashPath.getFileSystem(conf);
+      for (FileStatus file : inputFS.globStatus(inputPath)) {
+        Path trashDir = new Path(trashPath + file.getPath().getParent().toUri().getPath());
+        if (!trashFS.exists(trashDir)) {
+          trashFS.mkdirs(trashDir);
+        }
+        Path trashFile = new Path(trashDir, file.getPath().getName());
+        inputFS.rename(file.getPath(), trashFile);
+      }
+
+      // move file from tmp dir to output dir
+      FileSystem tmpFS = tmpPath.getFileSystem(conf);
+      for (FileStatus file : tmpFS.listStatus(tmpPath)) {
+        tmpFS.rename(file.getPath(),
+            new Path(outputPath, filePrefix + file.getPath().getName()));
+      }
+      // TODO delete tmp dir
+
+      // TODO delete input dir when empty
     }
 
     return ret;
