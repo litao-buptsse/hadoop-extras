@@ -1,4 +1,4 @@
-package com.sogou.hadoop.extras.tools.hdfs.statistics;
+package com.sogou.hadoop.extras.tools.statistics;
 
 import com.sogou.hadoop.extras.common.HiveUtils;
 import org.apache.commons.logging.Log;
@@ -16,12 +16,13 @@ import java.util.List;
 /**
  * Created by lauo on 16/12/9.
  */
-public class StatisticsLogDetail {
-  private final static Log log = LogFactory.getLog(StatisticsLogDetail.class);
+public class Statistics {
+  private final static Log log = LogFactory.getLog(Statistics.class);
 
   private static Configuration conf = new Configuration();
 
-  public static long[] dus(String db, String table, List<String> partitionVals) throws TException, IOException {
+  public static long[] dus(String db, String table, List<String> partitionVals)
+      throws TException, IOException {
     String dirPattern = getLocationOnlyPath(
         HiveUtils.getLocation(db, table, partitionVals));
     return dus(dirPattern, "*");
@@ -31,13 +32,15 @@ public class StatisticsLogDetail {
     Path path = new Path(pathPattern);
     FileSystem fs = path.getFileSystem(conf);
 
-    if (!fs.exists(path)) {
-      throw new IOException(String.format("path not exists: %s", path));
-    }
-
     long sumFileSize = 0L;
     long sumFileCnt = 0L;
-    for (FileStatus fileStatus : fs.globStatus(path)) {
+    FileStatus[] fileStatuses = fs.globStatus(path);
+    if (fileStatuses.length == 0) {
+      throw new IOException(
+          String.format("no path match pattern: %s", pathPattern));
+    }
+
+    for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isFile()) {
         sumFileSize += fileStatus.getLen();
         sumFileCnt++;
@@ -47,7 +50,8 @@ public class StatisticsLogDetail {
     return new long[]{sumFileSize, sumFileCnt};
   }
 
-  public static long[] dus(String dirPattern, String filePattern) throws IOException {
+  public static long[] dus(String dirPattern, String filePattern)
+      throws IOException {
     if (!dirPattern.endsWith("/")) {
       dirPattern += "/";
     }
@@ -58,9 +62,12 @@ public class StatisticsLogDetail {
     return new Path(location).toUri().getPath();
   }
 
-  private static void statistics(String[] args) {
+  public static void main(String[] args) {
     if (args.length != 1 + 2 && args.length != 1 + 3) {
-      log.error("need args: <type> <dirPattern> <filePattern> or  <type> <db> <table> <partitionValStrs>");
+      log.error(
+          "need args: " +
+              "<type> <dirPattern> <filePattern>" +
+              " or <type> <db> <table> <partitionValStrs>");
       System.exit(1);
     }
 
@@ -75,14 +82,14 @@ public class StatisticsLogDetail {
       if ("HDFS".equals(type) && args.length == 1 + 2) {
         String dirPattern = args[1];
         String filePattern = args[2];
-        rs = StatisticsLogDetail.dus(dirPattern, filePattern);
+        rs = Statistics.dus(dirPattern, filePattern);
       } else {//if ("Hive".equals(type) && args.length == 1 + 3) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
             partitionValStrs.split("\\s+/\\s+"));
-        rs = StatisticsLogDetail.dus(db, table, partitionVals);
+        rs = Statistics.dus(db, table, partitionVals);
       }
       System.out.println(rs[0] + "," + rs[1]);
       System.exit(0);
@@ -90,10 +97,6 @@ public class StatisticsLogDetail {
       log.error(e);
       System.exit(1);
     }
-  }
-
-  public static void main(String[] args) {
-    statistics(args);
   }
 
 }
