@@ -105,8 +105,7 @@ public class Clean {
             partitionValStrs.split("\\s+/\\s+"));
         rs = Clean.clean(db, table, partitionVals, trashDir);
       }
-      System.out.println(rs);
-      System.exit(0);
+      System.exit(rs ? 0 : 1);
     } catch (IOException | TException e) {
       log.error(e);
       System.exit(1);
