@@ -16,7 +16,7 @@ import java.util.List;
 
 /**
  * Created by lauo on 16/12/27.
- * move target files to trashDir, saving their absolute path under the trashDir.
+ * move target files to trashRootDir, saving their absolute path under the trashRootDir.
  */
 public class Clean {
   private final static Log log = LogFactory.getLog(Clean.class);
@@ -27,24 +27,24 @@ public class Clean {
 
   public static boolean clean(
       String dirPattern, String filePattern
-      , String trashDir
+      , String trashRootDir
   ) throws IOException {
     if (!dirPattern.endsWith("/")) {
       dirPattern += "/";
     }
     log.debug("dirPattern=" + dirPattern);
-    return clean(dirPattern + filePattern, trashDir);
+    return clean(dirPattern + filePattern, trashRootDir);
   }
 
   public static boolean clean(
       String db, String table, List<String> partitionVals
-      , String trashDir
+      , String trashRootDir
   ) throws IOException, TException {
     String dirPattern = new Path(
         HiveUtils.getLocation(db, table, partitionVals)
     ).toUri().getPath();
     log.debug("dirPattern=" + dirPattern);
-    boolean cleanFileSuccess = clean(dirPattern, "*", trashDir);
+    boolean cleanFileSuccess = clean(dirPattern, "*", trashRootDir);
     if (cleanFileSuccess) {
       HiveUtils.dropPartition(db, table, partitionVals, false);
     }
@@ -53,7 +53,7 @@ public class Clean {
 
   public static boolean clean(
       String pathPattern
-      , String trashDir
+      , String trashRootDir
   ) throws IOException {
     Path path = new Path(pathPattern);
     FileSystem fs = path.getFileSystem(conf);
@@ -64,22 +64,23 @@ public class Clean {
           String.format("no path match pattern: %s", pathPattern));
     }
 
-    if (!trashDir.endsWith("/")) {
-      trashDir += "/";
+    if (!trashRootDir.endsWith("/")) {
+      trashRootDir += "/";
     }
 
     boolean success = false;
-    Path trashPath = null;
-    FileSystem trashFS = new Path(trashDir).getFileSystem(conf);
+    Path trashDirPath = null;
+    FileSystem trashFS = new Path(trashRootDir).getFileSystem(conf);
     for (FileStatus fileStatus : fileStatuses) {
-      trashPath = new Path(
-          trashDir + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
-      if (!trashFS.exists(trashPath)) {
-        trashFS.mkdirs(trashPath);
+      trashDirPath = new Path(
+          trashRootDir + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
+      if (!trashFS.exists(trashDirPath)) {
+        trashFS.mkdirs(trashDirPath);
       }
+      Path trashFilePath = new Path(trashDirPath, fileStatus.getPath().getName());
       log.debug("fileStatus.getPath()=" + fileStatus.getPath());
-      log.debug("trashPath=" + trashPath);
-      if (!(success = trashFS.rename(fileStatus.getPath(), trashPath))) {
+      log.debug("trashDirPath=" + trashDirPath);
+      if (!(success = trashFS.rename(fileStatus.getPath(), trashFilePath))) {
         log.debug("success=" + success);
         break;
       }
@@ -92,8 +93,8 @@ public class Clean {
     if (args.length != 1 + 2 + 1 && args.length != 1 + 3 + 1) {
       log.error(
           "need args: " +
-              "<type> <dirPattern> <filePattern> <trashDir>" +
-              " or <type> <db> <table> <partitionValStrs> <trashDir>");
+              "<type> <dirPattern> <filePattern> <trashRootDir>" +
+              " or <type> <db> <table> <partitionValStrs> <trashRootDir>");
       System.exit(1);
     }
 
@@ -103,21 +104,22 @@ public class Clean {
       System.exit(1);
     }
 
-    String trashDir = args[args.length - 1];
-    log.debug("trashDir=" + trashDir);
+    String trashRootDir = args[args.length - 1];
+    log.debug("trashRootDir=" + trashRootDir);
+
     try {
       boolean rs = false;
       if ("HDFS".equals(type) && args.length == 1 + 2 + 1) {
         String dirPattern = args[1];
         String filePattern = args[2];
-        rs = Clean.clean(dirPattern, filePattern, trashDir);
+        rs = Clean.clean(dirPattern, filePattern, trashRootDir);
       } else {//if ("Hive".equals(type) && args.length == 1 + 3 + 1) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
             partitionValStrs.split("\\s*/\\s*"));
-        rs = Clean.clean(db, table, partitionVals, trashDir);
+        rs = Clean.clean(db, table, partitionVals, trashRootDir);
       }
       System.exit(rs ? 0 : 1);
     } catch (IOException | TException e) {
