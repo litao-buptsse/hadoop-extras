@@ -25,68 +25,38 @@ public class Clean {
 
   private final static String today = DateTime.now().toString("yyyyMMdd");
 
-  public static boolean clean(
-      String dirPattern, String filePattern
-      , String trashRootDir
-  ) throws IOException {
-    if (!dirPattern.endsWith("/")) {
-      dirPattern += "/";
-    }
-    log.debug("dirPattern=" + dirPattern);
-    return clean(dirPattern + filePattern, trashRootDir);
-  }
-
-  public static boolean clean(
-      String db, String table, List<String> partitionVals
-      , String trashRootDir
-  ) throws IOException, TException {
+  public static void cleanSafely(String db, String table, List<String> partitionVals,
+                                 String trashRootDir) throws IOException, TException {
     String dirPattern = new Path(
         HiveUtils.getLocation(db, table, partitionVals)
     ).toUri().getPath();
-    log.debug("dirPattern=" + dirPattern);
-    boolean cleanFileSuccess = clean(dirPattern, "*", trashRootDir);
-    if (cleanFileSuccess) {
-      HiveUtils.dropPartition(db, table, partitionVals, false);
-    }
-    return cleanFileSuccess;
+    cleanSafely(dirPattern, "*", trashRootDir);
+    HiveUtils.dropPartition(db, table, partitionVals, false);
   }
 
-  public static boolean clean(
-      String pathPattern
-      , String trashRootDir
-  ) throws IOException {
+  public static void cleanSafely(String dirPattern, String filePattern,
+                                 String trashRootDir) throws IOException {
+    cleanSafely(dirPattern + "/" + filePattern, trashRootDir);
+  }
+
+  public static void cleanSafely(String pathPattern,
+                                 String trashRootDir) throws IOException {
     Path path = new Path(pathPattern);
     FileSystem fs = path.getFileSystem(conf);
 
     FileStatus[] fileStatuses = fs.globStatus(path);
-    if (fileStatuses.length == 0) {
-      throw new IOException(
-          String.format("no path match pattern: %s", pathPattern));
-    }
 
-    if (!trashRootDir.endsWith("/")) {
-      trashRootDir += "/";
-    }
-
-    boolean success = false;
     Path trashDirPath = null;
     FileSystem trashFS = new Path(trashRootDir).getFileSystem(conf);
     for (FileStatus fileStatus : fileStatuses) {
       trashDirPath = new Path(
-          trashRootDir + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
+          trashRootDir + "/" + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
       if (!trashFS.exists(trashDirPath)) {
         trashFS.mkdirs(trashDirPath);
       }
       Path trashFilePath = new Path(trashDirPath, fileStatus.getPath().getName());
-      log.debug("fileStatus.getPath()=" + fileStatus.getPath());
-      log.debug("trashDirPath=" + trashDirPath);
-      if (!(success = trashFS.rename(fileStatus.getPath(), trashFilePath))) {
-        log.debug("success=" + success);
-        break;
-      }
+      trashFS.rename(fileStatus.getPath(), trashFilePath);
     }
-
-    return success;
   }
 
   public static void main(String[] args) {
@@ -99,29 +69,25 @@ public class Clean {
     }
 
     String type = args[0];
-    if (!"HDFS".equals(type) && !"Hive".equals(type)) {
-      log.error(String.format("type not exists: %s", type));
-      System.exit(1);
-    }
-
     String trashRootDir = args[args.length - 1];
-    log.debug("trashRootDir=" + trashRootDir);
 
     try {
-      boolean rs = false;
       if ("HDFS".equals(type) && args.length == 1 + 2 + 1) {
         String dirPattern = args[1];
         String filePattern = args[2];
-        rs = Clean.clean(dirPattern, filePattern, trashRootDir);
-      } else {//if ("Hive".equals(type) && args.length == 1 + 3 + 1) {
+        Clean.cleanSafely(dirPattern, filePattern, trashRootDir);
+      } else if ("Hive".equals(type) && args.length == 1 + 3 + 1) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
             partitionValStrs.split("\\s*/\\s*"));
-        rs = Clean.clean(db, table, partitionVals, trashRootDir);
+        Clean.cleanSafely(db, table, partitionVals, trashRootDir);
+      } else {
+        log.error(String.format("type with given args not exists: %s", type));
+        System.exit(1);
       }
-      System.exit(rs ? 0 : 1);
+      System.exit(0);
     } catch (IOException | TException e) {
       log.error(e);
       System.exit(1);
