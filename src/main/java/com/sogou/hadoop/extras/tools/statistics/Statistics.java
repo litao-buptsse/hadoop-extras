@@ -23,23 +23,25 @@ public class Statistics {
 
   public static long[] dus(String db, String table, List<String> partitionVals)
       throws TException, IOException {
-    String dirPattern = getLocationOnlyPath(
-        HiveUtils.getLocation(db, table, partitionVals));
+    String dirPattern = new Path(
+        HiveUtils.getLocation(db, table, partitionVals)
+    ).toUri().getPath();
     return dus(dirPattern, "*");
+  }
+
+  public static long[] dus(String dirPattern, String filePattern)
+      throws IOException {
+    return dus(dirPattern + "/"  + filePattern);
   }
 
   public static long[] dus(String pathPattern) throws IOException {
     Path path = new Path(pathPattern);
     FileSystem fs = path.getFileSystem(conf);
 
+    FileStatus[] fileStatuses = fs.globStatus(path);
+
     long sumFileSize = 0L;
     long sumFileCnt = 0L;
-    FileStatus[] fileStatuses = fs.globStatus(path);
-    if (fileStatuses.length == 0) {
-      throw new IOException(
-          String.format("no path match pattern: %s", pathPattern));
-    }
-
     for (FileStatus fileStatus : fileStatuses) {
       if (fileStatus.isFile()) {
         sumFileSize += fileStatus.getLen();
@@ -50,20 +52,8 @@ public class Statistics {
     return new long[]{sumFileSize, sumFileCnt};
   }
 
-  public static long[] dus(String dirPattern, String filePattern)
-      throws IOException {
-    if (!dirPattern.endsWith("/")) {
-      dirPattern += "/";
-    }
-    return dus(dirPattern + filePattern);
-  }
-
-  private static String getLocationOnlyPath(String location) {
-    return new Path(location).toUri().getPath();
-  }
-
   public static void main(String[] args) {
-    if (args.length != 1 + 2 && args.length != 1 + 3) {
+    if (args.length != 3 && args.length != 4) {
       log.error(
           "need args: " +
               "<type> <dirPattern> <filePattern>" +
@@ -72,24 +62,22 @@ public class Statistics {
     }
 
     String type = args[0];
-    if (!"HDFS".equals(type) && !"Hive".equals(type)) {
-      log.error(String.format("type not exists: %s", type));
-      System.exit(1);
-    }
-
     try {
       long[] rs = null;
-      if ("HDFS".equals(type) && args.length == 1 + 2) {
+      if ("HDFS".equals(type) && args.length == 3) {
         String dirPattern = args[1];
         String filePattern = args[2];
         rs = Statistics.dus(dirPattern, filePattern);
-      } else {//if ("Hive".equals(type) && args.length == 1 + 3) {
+      } else if ("Hive".equals(type) && args.length == 4) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
             partitionValStrs.split("\\s+/\\s+"));
         rs = Statistics.dus(db, table, partitionVals);
+      } else {
+        log.error(String.format("type with given args not exists: %s", type));
+        System.exit(1);
       }
       System.out.println(rs[0] + "," + rs[1]);
       System.exit(0);
