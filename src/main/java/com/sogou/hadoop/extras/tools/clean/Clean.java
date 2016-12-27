@@ -8,6 +8,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.thrift.TException;
+import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,6 +23,8 @@ public class Clean {
 
   private static Configuration conf = new Configuration();
 
+  private final static String today = DateTime.now().toString("yyyyMMdd");
+
   public static boolean clean(
       String dirPattern, String filePattern
       , String trashDir
@@ -29,6 +32,7 @@ public class Clean {
     if (!dirPattern.endsWith("/")) {
       dirPattern += "/";
     }
+    log.debug("dirPattern=" + dirPattern);
     return clean(dirPattern + filePattern, trashDir);
   }
 
@@ -39,6 +43,7 @@ public class Clean {
     String dirPattern = new Path(
         HiveUtils.getLocation(db, table, partitionVals)
     ).toUri().getPath();
+    log.debug("dirPattern=" + dirPattern);
     boolean cleanFileSuccess = clean(dirPattern, "*", trashDir);
     if (cleanFileSuccess) {
       HiveUtils.dropPartition(db, table, partitionVals, false);
@@ -65,9 +70,17 @@ public class Clean {
 
     boolean success = false;
     Path trashPath = null;
+    FileSystem trashFS = new Path(trashDir).getFileSystem(conf);
     for (FileStatus fileStatus : fileStatuses) {
-      trashPath = new Path(trashDir + fileStatus.getPath().getParent().toUri().getPath());
-      if (!(success = fs.rename(fileStatus.getPath(), trashPath))) {
+      trashPath = new Path(
+          trashDir + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
+      if (!trashFS.exists(trashPath)) {
+        trashFS.mkdirs(trashPath);
+      }
+      log.debug("fileStatus.getPath()=" + fileStatus.getPath());
+      log.debug("trashPath=" + trashPath);
+      if (!(success = trashFS.rename(fileStatus.getPath(), trashPath))) {
+        log.debug("success=" + success);
         break;
       }
     }
@@ -91,6 +104,7 @@ public class Clean {
     }
 
     String trashDir = args[args.length - 1];
+    log.debug("trashDir=" + trashDir);
     try {
       boolean rs = false;
       if ("HDFS".equals(type) && args.length == 1 + 2 + 1) {
@@ -102,7 +116,7 @@ public class Clean {
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
-            partitionValStrs.split("\\s+/\\s+"));
+            partitionValStrs.split("\\s*/\\s*"));
         rs = Clean.clean(db, table, partitionVals, trashDir);
       }
       System.exit(rs ? 0 : 1);
