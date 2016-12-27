@@ -46,10 +46,9 @@ public class Clean {
 
     FileStatus[] fileStatuses = fs.globStatus(path);
 
-    Path trashDirPath = null;
     FileSystem trashFS = new Path(trashRootDir).getFileSystem(conf);
     for (FileStatus fileStatus : fileStatuses) {
-      trashDirPath = new Path(
+      Path trashDirPath = new Path(
           trashRootDir + "/" + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
       if (!trashFS.exists(trashDirPath)) {
         trashFS.mkdirs(trashDirPath);
@@ -70,7 +69,6 @@ public class Clean {
 
     String type = args[0];
     String trashRootDir = args[args.length - 1];
-
     try {
       if ("HDFS".equals(type) && args.length == 1 + 2 + 1) {
         String dirPattern = args[1];
