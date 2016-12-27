@@ -5,3 +5,4 @@ logs/
 /data/
 *.log
 /*.tar
+/tmp_wont_deploy
