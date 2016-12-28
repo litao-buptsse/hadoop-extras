@@ -1,5 +1,6 @@
 package com.sogou.hadoop.extras.tools.clean;
 
+import com.sogou.hadoop.extras.common.CommonUtils;
 import com.sogou.hadoop.extras.common.HiveUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -8,7 +9,6 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.thrift.TException;
-import org.joda.time.DateTime;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,7 +23,7 @@ public class Clean {
 
   private static Configuration conf = new Configuration();
 
-  private final static String today = DateTime.now().toString("yyyyMMdd");
+  private final static String today = CommonUtils.now("yyyyMMdd");
 
   public static void safelyClean(String db, String table, List<String> partitionVals,
                                  String trashRootDir) throws IOException, TException {
