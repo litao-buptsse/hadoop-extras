@@ -145,6 +145,7 @@ public class DistributedHdfsCompression implements Tool {
   }
 
   public static void main(String[] args) throws Exception {
-    ToolRunner.run(new DistributedHdfsCompression(), args);
+    int ret = ToolRunner.run(new DistributedHdfsCompression(), args);
+    System.exit(ret);
   }
 }
