@@ -74,7 +74,7 @@ public class Clean {
         String dirPattern = args[1];
         String filePattern = args[2];
         Clean.safelyClean(dirPattern, filePattern, trashRootDir);
-      } else if ("Hive".equals(type) && args.length == 5) {
+      } else if ("HIVE".equals(type) && args.length == 5) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
