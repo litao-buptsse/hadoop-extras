@@ -38,7 +38,7 @@ public class DistributedHdfsCompression implements Tool {
 
     String ymd = CommonUtils.now("yyyyMMdd");
     Path inputPath = new Path(args[0], args[1]);
-    Path tmpPath = new Path(String.format("%s/$s/%s",
+    Path tmpPath = new Path(String.format("%s/%s/%s",
         conf.get("tmpPath", DEFAULT_TMP_PATH), ymd, System.nanoTime()));
     Path outputPath = new Path(conf.get("outputPath", args[0]));
     Path trashPath = new Path(String.format("%s/%s",
