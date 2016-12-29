@@ -68,7 +68,7 @@ public class Statistics {
         String dirPattern = args[1];
         String filePattern = args[2];
         rs = Statistics.dus(dirPattern, filePattern);
-      } else if ("Hive".equals(type) && args.length == 4) {
+      } else if ("HIVE".equals(type) && args.length == 4) {
         String db = args[1];
         String table = args[2];
         String partitionValStrs = args[3];
