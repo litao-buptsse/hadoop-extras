@@ -46,12 +46,14 @@ public class DistributedHdfsCompression implements Tool {
     String compressType = args[2].toUpperCase();
     String filePrefix = conf.get("filePrefix", "");
 
-    if (tmpPath.getFileSystem(conf).exists(tmpPath)) {
+    FileSystem fs = inputPath.getFileSystem(conf);
+
+    if (fs.exists(tmpPath)) {
       log.error("tmpPath already exist");
       return 1;
     }
 
-    if (!outputPath.getFileSystem(conf).exists(outputPath)) {
+    if (!fs.exists(outputPath)) {
       log.error("outputPath not exist");
       return 1;
     }
@@ -109,21 +111,18 @@ public class DistributedHdfsCompression implements Tool {
       }
 
       // move file from input dir to trash dir
-      FileSystem inputFS = inputPath.getFileSystem(conf);
-      FileSystem trashFS = trashPath.getFileSystem(conf);
-      for (FileStatus file : inputFS.globStatus(inputPath)) {
+      for (FileStatus file : fs.globStatus(inputPath)) {
         Path trashDir = new Path(trashPath + file.getPath().getParent().toUri().getPath());
-        if (!trashFS.exists(trashDir)) {
-          trashFS.mkdirs(trashDir);
+        if (!fs.exists(trashDir)) {
+          fs.mkdirs(trashDir);
         }
         Path trashFile = new Path(trashDir, file.getPath().getName());
-        inputFS.rename(file.getPath(), trashFile);
+        fs.rename(file.getPath(), trashFile);
       }
 
       // move file from tmp dir to output dir
-      FileSystem tmpFS = tmpPath.getFileSystem(conf);
-      for (FileStatus file : tmpFS.listStatus(tmpPath)) {
-        tmpFS.rename(file.getPath(),
+      for (FileStatus file : fs.listStatus(tmpPath)) {
+        fs.rename(file.getPath(),
             new Path(outputPath, filePrefix + file.getPath().getName()));
       }
       // TODO delete tmp dir

@@ -46,15 +46,14 @@ public class Clean {
 
     FileStatus[] fileStatuses = fs.globStatus(path);
 
-    FileSystem trashFS = new Path(trashRootDir).getFileSystem(conf);
     for (FileStatus fileStatus : fileStatuses) {
       Path trashDirPath = new Path(
           trashRootDir + "/" + today + "/" + fileStatus.getPath().getParent().toUri().getPath());
-      if (!trashFS.exists(trashDirPath)) {
-        trashFS.mkdirs(trashDirPath);
+      if (!fs.exists(trashDirPath)) {
+        fs.mkdirs(trashDirPath);
       }
       Path trashFilePath = new Path(trashDirPath, fileStatus.getPath().getName());
-      trashFS.rename(fileStatus.getPath(), trashFilePath);
+      fs.rename(fileStatus.getPath(), trashFilePath);
     }
   }
 
