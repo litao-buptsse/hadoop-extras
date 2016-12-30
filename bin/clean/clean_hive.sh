@@ -5,7 +5,7 @@ if [ $# -lt 3 ]; then
   exit 1
 fi
 
-type="Hive"
+type="HIVE"
 db=$1
 table=$2
 partitionValStrs=$3
