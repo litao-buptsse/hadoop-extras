@@ -73,7 +73,7 @@ public class Statistics {
         String table = args[2];
         String partitionValStrs = args[3];
         List<String> partitionVals = Arrays.asList(
-            partitionValStrs.split("\\s+/\\s+"));
+            partitionValStrs.split("\\s*/\\s*"));
         rs = Statistics.dus(db, table, partitionVals);
       } else {
         log.error(String.format("type with given args not exists: %s", type));
